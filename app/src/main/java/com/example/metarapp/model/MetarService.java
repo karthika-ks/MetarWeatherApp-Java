@@ -1,37 +1,32 @@
 package com.example.metarapp.model;
 
 import android.app.IntentService;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.os.IBinder;
+import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MetarService extends IntentService {
     private static final String TAG = "MetarService";
-    private ConnectivityManager connectivityManager;
     public static final String ACTION_NETWORK_RESPONSE = "Network_Response";
+    public static final int NETWORK_STATUS_NO_INTERNET_CONNECTION = 0;
+    public static final int NETWORK_STATUS_INTERNET_CONNECTION_OK = 1;
+    public static final int NETWORK_STATUS_AIRPORT_NOT_FOUND = 2;
+    public static final String EXTRA_CODE = "code";
+    public static final String EXTRA_DECODED_DATA = "decoded_data";
+    public static final String EXTRA_NETWORK_STATUS = "network_status";
     public MetarService() {
         super("Metar Intent Service");
     }
@@ -41,65 +36,73 @@ public class MetarService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         String code = intent.getStringExtra("code");
         // Network calls
-        String decodedData = "";
+        Bundle metarData = null;
         try {
-            decodedData = requestMetarDataFromServer(code);
+            if (!isNetworkConnected()) {
+                sendMetarDetailsFromServer(code, "", NETWORK_STATUS_NO_INTERNET_CONNECTION);
+            } else {
+                metarData = requestMetarDataFromServer(code);
+                sendMetarDetailsFromServer(code, metarData.getString(EXTRA_DECODED_DATA), metarData.getInt(EXTRA_NETWORK_STATUS));
+            }
+
         } catch (IOException e) {
-            e.printStackTrace();
-            sendMetarDetailsFromServer(code, "Airport not found");
+            sendMetarDetailsFromServer(code, "", NETWORK_STATUS_AIRPORT_NOT_FOUND);
         }
-        sendMetarDetailsFromServer(code, decodedData);
     }
 
-    private void sendMetarDetailsFromServer(String code, String decodedData) {
+    private void sendMetarDetailsFromServer(String code, String decodedData, int networkStatus) {
         Intent intent = new Intent();
         intent.setAction(ACTION_NETWORK_RESPONSE);
-        intent.putExtra("code", code);
-        intent.putExtra("decoded_data", decodedData);
+        intent.putExtra(EXTRA_CODE, code);
+        intent.putExtra(EXTRA_DECODED_DATA, decodedData);
+        intent.putExtra(EXTRA_NETWORK_STATUS, networkStatus);
         sendBroadcast(intent);
     }
 
-    private String requestMetarDataFromServer(String code) throws IOException {
+    private Bundle requestMetarDataFromServer(String code) throws IOException {
         Log.i(TAG, "requestMetarDataFromServer: code - " + code);
+        Bundle bundle = new Bundle();
 
-        if (!isNetworkConnected()) {
-            return "No network connection";
+        InputStream inputStream;
+        try {
+            Log.i(TAG, "requestMetarDataFromServer: before getInputStream");
+            inputStream = getHttpConnection(code).getInputStream();
+            Log.i(TAG, "requestMetarDataFromServer: after getInputStream");
+
+            if (inputStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        inputStream));
+                StringBuilder builder = new StringBuilder();
+
+                String line = "";
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line).append('\n');
+                }
+                reader.close();
+                Log.i(TAG, "requestMetarDataFromServer: Response - " + builder.toString());
+                bundle.putString(EXTRA_CODE, code);
+                bundle.putString(EXTRA_DECODED_DATA, builder.toString());
+                bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
+            }
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "requestMetarDataFromServer: FileNotFoundException", e);
+            bundle.putString(EXTRA_CODE, code);
+            bundle.putString(EXTRA_DECODED_DATA, "");
+            bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);
+            return bundle;
         }
+        return bundle;
+    }
+
+    private HttpURLConnection getHttpConnection(String code) throws IOException {
         URL url = new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/" + code + ".TXT");
-//        URL url = new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/");
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         httpConn.setUseCaches(false);
-
         httpConn.setDoInput(true); // true if we want to read server's response
         httpConn.setDoOutput(false); // false indicates this is a GET request
-
-        InputStream inputStream = null;
-        if (httpConn != null) {
-            try {
-                inputStream = httpConn.getInputStream();
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "requestMetarDataFromServer: FileNotFoundException", e);
-                return "Airport not found";
-            }
-
-        } else {
-            throw new IOException("Connection is not established.");
-        }
-
-        if (inputStream != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    inputStream));
-            StringBuilder builder = new StringBuilder();
-
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                builder.append(line).append('\n');
-            }
-            reader.close();
-            Log.i(TAG, "requestMetarDataFromServer: Response - " + builder.toString());
-            return builder.toString();
-        }
-        return "";
+        httpConn.setReadTimeout(1000);
+        httpConn.setConnectTimeout(1000);
+        return httpConn;
     }
 
     private boolean isNetworkConnected() {
@@ -112,7 +115,7 @@ public class MetarService extends IntentService {
                 HttpURLConnection urlc = (HttpURLConnection)url.openConnection();
                 urlc.setRequestProperty("User-Agent", "test");
                 urlc.setRequestProperty("Connection", "close");
-                urlc.setConnectTimeout(1000); // mTimeout is in seconds
+                urlc.setConnectTimeout(100); // mTimeout is in seconds
                 urlc.connect();
                 Log.i(TAG, "isNetworkConnected: Response code : " + urlc.getResponseCode());
                 if (urlc.getResponseCode() == 200) {
