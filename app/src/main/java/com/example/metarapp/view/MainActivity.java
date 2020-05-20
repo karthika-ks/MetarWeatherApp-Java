@@ -18,8 +18,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ActivityMainBinding activityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        mViewModel = new MetarViewModel();
-        mViewModel.setContext(getApplicationContext());
+        mViewModel = new MetarViewModel(getApplicationContext());
         activityMainBinding.setViewModel(mViewModel);
         activityMainBinding.executePendingBindings();
         activityMainBinding.setLifecycleOwner(this);
