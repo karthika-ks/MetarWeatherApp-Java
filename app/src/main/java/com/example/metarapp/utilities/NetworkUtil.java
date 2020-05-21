@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +59,7 @@ public class NetworkUtil {
                 urlc.setConnectTimeout(100); // mTimeout is in seconds
                 urlc.connect();
                 Log.i(TAG, "isNetworkConnected: Response code : " + urlc.getResponseCode());
-                if (urlc.getResponseCode() == 200) {
+                if (urlc.getResponseCode() == 200 || urlc.getResponseCode() == 429) {
                     return true;
                 } else {
                     return false;

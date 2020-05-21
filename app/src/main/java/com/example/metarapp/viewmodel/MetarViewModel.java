@@ -151,12 +151,15 @@ public class MetarViewModel extends ViewModel {
                 String code = intent.getStringExtra("code");
                 int networkStatus = intent.getIntExtra(MetarService.EXTRA_NETWORK_STATUS, 0);
                 updateUi(code, decodedData, networkStatus);
+
                 if (networkStatus == NetworkUtil.NETWORK_STATUS_INTERNET_CONNECTION_OK) {
+
                     Bundle bundle = new Bundle();
                     bundle.putString(EXTRA_CODE, code);
                     bundle.putString(EXTRA_DECODED_DATA, decodedData);
                     bundle.putInt(EXTRA_NETWORK_STATUS, NetworkUtil.NETWORK_STATUS_INTERNET_CONNECTION_OK);
                     MetarDataManager.getInstance().saveMetarData(bundle);
+
                 }
             }
         }

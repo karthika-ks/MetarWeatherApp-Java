@@ -31,6 +31,6 @@ public class ScheduledDownloadManager {
 
     public void startSchedular() {
         Log.d(">>>", "startSchedular");
-        schedulerHandler = scheduler.scheduleAtFixedRate(longRunning, 0, 5, TimeUnit.SECONDS);
+        schedulerHandler = scheduler.scheduleAtFixedRate(longRunning, 0, 10, TimeUnit.SECONDS);
     }
 }

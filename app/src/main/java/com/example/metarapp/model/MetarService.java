@@ -2,7 +2,9 @@ package com.example.metarapp.model;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -38,13 +40,20 @@ public class MetarService extends IntentService {
         Log.i(TAG, "onHandleIntent: ");
 
         if (intent.getStringExtra(SERVICE_ACTION).equals(FETCH_GERMAN_STATION_LIST)) {
-//            try {
-//                String[] codeList = new NetworkUtil().parseStationNamesFromUrl().toArray(new String[0]);
-//                Log.i(TAG, "onHandleIntent: List size = " + codeList.length);
-//                sendGermanStationList(codeList);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            try {
+
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("GERMAN_LIST_STATUS", MODE_PRIVATE);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putBoolean("IS_AVAILABLE", false);
+                editor.putInt("DOWNLOAD_STATUS", 0); // 0 - DOWNLOADING, 1 - DOWNLOADED
+                editor.apply();
+
+                String[] codeList = new NetworkUtil().parseStationNamesFromUrl().toArray(new String[0]);
+                Log.i(TAG, "onHandleIntent: List size = " + codeList.length);
+                sendGermanStationList(codeList);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else if (intent.getStringExtra(SERVICE_ACTION).equals(FETCH_METAR_DATA)) {
 
             String code = intent.getStringExtra("code");

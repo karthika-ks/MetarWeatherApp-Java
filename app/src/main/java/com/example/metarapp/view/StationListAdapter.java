@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import com.example.metarapp.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StationListAdapter extends ArrayAdapter {
@@ -23,6 +24,11 @@ public class StationListAdapter extends ArrayAdapter {
 
     public StationListAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
+    }
+
+    public void setStationList(String[] stationList) {
+        this.stationList.clear();
+        this.stationList.addAll(Arrays.asList(stationList));
     }
 
     @Override

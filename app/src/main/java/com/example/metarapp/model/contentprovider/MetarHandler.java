@@ -23,7 +23,7 @@ public class MetarHandler extends AsyncQueryHandler {
 
         MetarDataManager dataManager = mDataManagerRef.get();
         if (dataManager != null) {
-            dataManager.onQueryComplete(cursor);
+            dataManager.onQueryComplete(token, cursor);
         }
     }
 
