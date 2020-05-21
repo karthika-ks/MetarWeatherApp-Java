@@ -5,14 +5,14 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.example.metarapp.MetarDataManager;
+import com.example.metarapp.model.MetarDataManager;
 
 import java.lang.ref.WeakReference;
 
-public class MetarHandler extends AsyncQueryHandler {
+public class MetarAsyncQueryHandler extends AsyncQueryHandler {
     private final WeakReference<MetarDataManager> mDataManagerRef;
 
-    public MetarHandler(MetarDataManager dataManager, ContentResolver cr) {
+    public MetarAsyncQueryHandler(MetarDataManager dataManager, ContentResolver cr) {
         super(cr);
         mDataManagerRef = new WeakReference<>(dataManager);
     }

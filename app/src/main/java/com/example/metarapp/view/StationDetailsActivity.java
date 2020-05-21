@@ -10,8 +10,10 @@ import com.example.metarapp.R;
 import com.example.metarapp.databinding.ActivityStationDetailsBinding;
 import com.example.metarapp.viewmodel.MetarViewModel;
 
+import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
+
 public class StationDetailsActivity extends AppCompatActivity {
-    private MetarViewModel mViewModel;
+    private static final String TAG = StationDetailsActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,19 +21,19 @@ public class StationDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_station_details);
 
         ActivityStationDetailsBinding activityStationDetailsBinding = DataBindingUtil.setContentView(this, R.layout.activity_station_details);
-        mViewModel = MetarViewModel.getInstance(getApplicationContext());
-        activityStationDetailsBinding.setViewModel(mViewModel);
+        MetarViewModel viewModel = MetarViewModel.getInstance(getApplicationContext());
+        activityStationDetailsBinding.setViewModel(viewModel);
         activityStationDetailsBinding.executePendingBindings();
         activityStationDetailsBinding.setLifecycleOwner(this);
 
-        String stationCode = getIntent().getStringExtra("station_code");
-        Log.i(">>>>>>", "onCreate: " + stationCode);
-        mViewModel.startMetarService(stationCode);
+        String stationCode = getIntent().getStringExtra(EXTRA_CODE);
+        Log.i(TAG, "onCreate: " + stationCode);
+        viewModel.startMetarService(stationCode);
+        viewModel.registerLifeCycleObserver(getLifecycle());
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mViewModel.clearMutableValues();
     }
 }

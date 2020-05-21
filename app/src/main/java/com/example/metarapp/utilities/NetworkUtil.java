@@ -13,24 +13,22 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.example.metarapp.model.MetarService.EXTRA_CODE;
-import static com.example.metarapp.model.MetarService.EXTRA_DECODED_DATA;
-import static com.example.metarapp.model.MetarService.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
+import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.utilities.Constants.FILTER_STRING_GERMAN;
+import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
+import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
 
 public class NetworkUtil {
-    private static final String TAG = NetworkUtil.class.getSimpleName();
 
-    public static final int NETWORK_STATUS_NO_INTERNET_CONNECTION = 0;
-    public static final int NETWORK_STATUS_INTERNET_CONNECTION_OK = 1;
-    public static final int NETWORK_STATUS_AIRPORT_NOT_FOUND = 2;
+    private static final String TAG = NetworkUtil.class.getSimpleName();
 
     private static HttpURLConnection getHttpConnection(URL url) throws IOException {
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -46,26 +44,35 @@ public class NetworkUtil {
         return new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/" + code + ".TXT");
     }
 
+    private static URL getStationListUrl() throws MalformedURLException {
+        return new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/");
+    }
+
     public boolean isNetworkConnected(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
         assert cm != null;
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
         if (activeNetwork != null && activeNetwork.isConnected()) {
             try {
                 URL url = new URL("https://www.google.com/");
                 HttpURLConnection urlc = (HttpURLConnection)url.openConnection();
                 urlc.setRequestProperty("User-Agent", "test");
                 urlc.setRequestProperty("Connection", "close");
-                urlc.setConnectTimeout(100); // mTimeout is in seconds
+                urlc.setConnectTimeout(60 * 1000); // mTimeout is in seconds
                 urlc.connect();
+
                 Log.i(TAG, "isNetworkConnected: Response code : " + urlc.getResponseCode());
+
                 if (urlc.getResponseCode() == 200 || urlc.getResponseCode() == 429) {
                     return true;
                 } else {
                     return false;
                 }
+
             } catch (IOException e) {
-                Log.i("warning", "Error checking internet connection", e);
+//                Log.e(TAG, "Error checking internet connection", e);
                 return false;
             }
         }
@@ -73,14 +80,17 @@ public class NetworkUtil {
         return false;
     }
 
-    public static Bundle readDecodedDataFromUrl(String code) throws IOException {
-        Log.i(TAG, "readDecodedDataFromUrl: Code " + code);
+    public static Bundle readDecodedDataFromServer(String code) throws IOException {
+        Log.i(TAG, "readDecodedDataFromServer: Code " + code);
+
         URL url = getDecodedDataUrl(code);
         StringBuilder builder = new StringBuilder();
         Bundle bundle = new Bundle();
 
         try {
+
             InputStream inputStream = NetworkUtil.getHttpConnection(url).getInputStream();
+
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -90,53 +100,59 @@ public class NetworkUtil {
                 }
                 reader.close();
 
-                Log.i(TAG, "readDecodedDataFromUrl: Code " + code + ", Response - " + builder.toString());
+                Log.i(TAG, "readDecodedDataFromServer: Code " + code + ", Response - " + builder.toString());
                 bundle.putString(EXTRA_CODE, code);
                 bundle.putString(EXTRA_DECODED_DATA, builder.toString());
                 bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
             }
         } catch (FileNotFoundException e) {
-            Log.e(TAG, "readDecodedDataFromUrl: FileNotFoundException", e);
+//            Log.e(TAG, "readDecodedDataFromServer: FileNotFoundException", e);
             bundle.putString(EXTRA_CODE, code);
             bundle.putString(EXTRA_DECODED_DATA, "");
             bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);
             return bundle;
         }
+
         return bundle;
     }
 
-    public List<String> parseStationNamesFromUrl() throws IOException{
-        Log.i(TAG, "parseStationNamesFromUrl: ");
-        URL url = new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/");
-        List<String> array = new ArrayList<>();
-        List<String> codeArray = new ArrayList<>();
+    public List<String> parseStationNamesFromServer() throws IOException{
+        Log.i(TAG, "parseStationNamesFromServer: ");
+
+        URL url = getStationListUrl();
+        List<String> htmlList = new ArrayList<>();
+        List<String> stationCodeList = new ArrayList<>();
 
         InputStream inputStream = NetworkUtil.getHttpConnection(url).getInputStream();
+
         if (inputStream != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
             String line = "";
             while ((line = reader.readLine()) != null) {
-                array.add(line);
+                htmlList.add(line);
             }
             reader.close();
         }
 
         //Read station name from array
-        for (String station : array) {
+        for (String station : htmlList) {
+
             Pattern p = Pattern.compile(".*\"(.*)[.].*");
             Matcher m = p.matcher(station);
 
             if (m.find()) {
-                for (int i=1;i<=m.groupCount();i++) {
+                for (int i = 1; i <= m.groupCount(); i++) {
+
                     String code = m.group(i).replaceAll(">", "");
-                    if (code.startsWith("ED")) {
-                        Log.i(TAG, "parseStationNamesFromUrl: <<<<<<<<<<<<<<<<<< " + code);
-                        codeArray.add(code);
+
+                    if (code.startsWith(FILTER_STRING_GERMAN)) {
+                        Log.i(TAG, "parseStationNamesFromServer: <<<<<<<<<<<<<<<<<< " + code);
+                        stationCodeList.add(code);
                     }
                     }
                 }
             }
-        return codeArray;
-        }
+        return stationCodeList;
+    }
 }

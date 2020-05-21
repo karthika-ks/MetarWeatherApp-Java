@@ -5,7 +5,7 @@
     <data>
         <import type="android.view.View"/>
         <variable
-                name="viewModel"
+            name="viewModel"
             type="com.example.metarapp.viewmodel.MetarViewModel" />
     </data>
 
@@ -22,25 +22,24 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:text="STATION"
+                android:id="@+id/airport_code"
+                android:text="@string/label_station"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/airport_code"
                 android:textStyle="bold"
-                android:textSize="15sp"/>
+                android:textSize="@dimen/edittxt_label_size"/>
             <EditText
                 android:id="@+id/edit_code"
-                android:layout_width="200dp"
+                android:layout_width="@dimen/edittxt_width"
                 android:layout_height="wrap_content"
-                android:hint="ICAO Code"
-                android:layout_marginStart="10dp"
-                android:text="@={viewModel.mEditTextCodeEntry}"
-                android:afterTextChanged="@{viewModel.onTextChanged}"/>
+                android:hint="@string/hint_icao_code"
+                android:layout_marginStart="@dimen/edittxt_margin_start"
+                android:text="@={viewModel.mEditTextCodeEntry}"/>
             <Button
                 android:id="@+id/btn_get_metar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GET METAR"
+                android:text="@string/btn_label_get_metar"
                 android:onClick="@{()-> viewModel.onSendClicked()}"/>
         </LinearLayout>
 
@@ -50,7 +49,7 @@
             layout="@layout/layout_metar_data_details"
             app:viewModel="@{viewModel}"
             app:layout_constraintTop_toBottomOf="@+id/lyt_edit_code"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="@dimen/detail_view_margin_top"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

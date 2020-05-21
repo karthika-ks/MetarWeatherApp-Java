@@ -22,11 +22,11 @@ public class StationListAdapter extends ArrayAdapter {
         TextView stationCode;
     }
 
-    public StationListAdapter(Context context, int textViewResourceId) {
+    StationListAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
     }
 
-    public void setStationList(String[] stationList) {
+    void setStationList(String[] stationList) {
         this.stationList.clear();
         this.stationList.addAll(Arrays.asList(stationList));
     }
@@ -51,12 +51,15 @@ public class StationListAdapter extends ArrayAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         StationViewHolder viewHolder;
+
         if (row == null) {
+
             LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             row = inflater.inflate(R.layout.station_list_item_card, parent, false);
             viewHolder = new StationViewHolder();
-            viewHolder.stationCode = (TextView) row.findViewById(R.id.station_code);
+            viewHolder.stationCode = row.findViewById(R.id.station_code);
             row.setTag(viewHolder);
+
         } else {
             viewHolder = (StationViewHolder) row.getTag();
         }

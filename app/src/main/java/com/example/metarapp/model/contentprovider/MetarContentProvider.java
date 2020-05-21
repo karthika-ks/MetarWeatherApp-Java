@@ -21,9 +21,10 @@ import java.util.HashMap;
 
 @SuppressLint("Registered")
 public class MetarContentProvider extends ContentProvider {
+
+    static final String TAG = "MetarContentProvider";
     static final String PROVIDER_NAME = "com.example.metarapp.model.contentprovider.MetarContentProvider";
     static final String URL = "content://" + PROVIDER_NAME + "/metar";
-    static final String TAG = "MetarContentProvider";
     public static final Uri CONTENT_URI = Uri.parse(URL);
     private static HashMap<String, String> values;
     static final UriMatcher uriMatcher;
@@ -78,6 +79,7 @@ public class MetarContentProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         long rowID = db.insert(TABLE_NAME, "", values);
+
         if (rowID > 0) {
             Uri _uri = ContentUris.withAppendedId(CONTENT_URI, rowID);
             getContext().getContentResolver().notifyChange(_uri, null);
@@ -88,12 +90,14 @@ public class MetarContentProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-        int count = 0;
+        int count;
+
         if (uriMatcher.match(uri) == 1) {
             count = db.delete(TABLE_NAME, selection, selectionArgs);
         } else {
             throw new IllegalArgumentException("Unknown URI " + uri);
         }
+
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
     }

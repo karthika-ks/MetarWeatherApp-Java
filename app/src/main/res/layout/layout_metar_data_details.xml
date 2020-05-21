@@ -24,7 +24,8 @@
             android:fillViewport="true"
             android:scrollbars="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:visibility="@{viewModel.isDownloadProgress ? View.GONE : View.VISIBLE}">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -49,7 +50,7 @@
                         android:textSize="25sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/holo_red_light"
-                        android:text="No internet connectivity, \nCheck you internet connection \n Try Again !!!"
+                        android:text="@string/txt_no_internet_connectivity"
                         android:visibility="@{viewModel.hasNetworkConnectivity ? View.GONE : View.VISIBLE}"
                         android:gravity="center"/>
 
@@ -63,7 +64,7 @@
                         android:textSize="25sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/holo_red_light"
-                        android:text="Airport not found, Please check ICAO code entered"
+                        android:text="@string/txt_airport_not_found"
                         android:visibility="@{viewModel.isStationAvailable ? View.GONE : View.VISIBLE}"
                         android:gravity="center"/>
 
@@ -83,7 +84,7 @@
                             android:layout_marginTop="20dp"
                             android:textSize="25sp"
                             android:textStyle="bold"
-                            android:text="Last available update"
+                            android:text="@string/txt_last_available_update"
                             android:visibility="@{viewModel.hasCachedDataAvailability ? View.VISIBLE : View.GONE}"
                             android:gravity="center"/>
 
@@ -101,7 +102,7 @@
                             android:id="@+id/txt_label_raw_data"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Raw Data"
+                            android:text="@string/label_raw_data"
                             android:textSize="25sp"
                             android:textStyle="bold"
                             app:layout_constraintTop_toBottomOf="@+id/txt_icao_code"
@@ -111,7 +112,7 @@
                             android:id="@+id/txt_raw_data"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Content"
+                            android:text="@string/content"
                             android:textSize="20sp"
                             app:layout_constraintTop_toBottomOf="@+id/txt_label_raw_data"
                             app:layout_constraintLeft_toLeftOf="parent"/>
@@ -119,7 +120,7 @@
                             android:id="@+id/txt_label_decoded_data"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Decoded Data"
+                            android:text="@string/label_decoded_data"
                             android:textSize="25sp"
                             android:textStyle="bold"
                             app:layout_constraintTop_toBottomOf="@+id/txt_raw_data"
@@ -129,12 +130,11 @@
                             android:id="@+id/txt_decoded_data"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@={viewModel.decodedData}"
+                            android:text="@={viewModel.mDecodedData}"
                             android:textSize="20sp"
                             app:layout_constraintTop_toBottomOf="@+id/txt_label_decoded_data"
                             app:layout_constraintLeft_toLeftOf="parent"/>
                     </LinearLayout>
-
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
         </ScrollView>

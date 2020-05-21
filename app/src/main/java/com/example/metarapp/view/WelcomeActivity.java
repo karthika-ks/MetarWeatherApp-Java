@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.metarapp.R;
 
 public class WelcomeActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -16,7 +17,7 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     public void onSearchByCode(View v) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, SearchByCodeActivity.class);
         startActivity(intent);
     }
 
