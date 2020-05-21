@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="station_icao_code_list">
+        <item>VECC</item>
+        <item>AVLC</item>
+        <item>AVPR</item>
+        <item>CAID</item>
+        <item>CPEH</item>
+        <item>CWDO</item>
+        <item>DAMD</item>
+        <item>DAOG</item>
+        <item>DTTN</item>
+        <item>EDVK</item>
+    </string-array>
+</resources>

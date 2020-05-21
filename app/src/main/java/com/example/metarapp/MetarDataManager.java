@@ -1,6 +1,11 @@
 package com.example.metarapp;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,9 +13,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.example.metarapp.model.MetarService;
 import com.example.metarapp.model.contentprovider.MetarContentProvider;
 import com.example.metarapp.model.contentprovider.MetarHandler;
-import com.example.metarapp.utilities.NetworkUtil;
+import com.example.metarapp.viewmodel.MetarViewModel;
 
 import java.util.HashMap;
 import java.util.Queue;
@@ -25,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.example.metarapp.model.MetarService.EXTRA_CODE;
 import static com.example.metarapp.model.MetarService.EXTRA_DECODED_DATA;
 import static com.example.metarapp.model.MetarService.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.model.MetarService.EXTRA_STATION_LIST;
 import static com.example.metarapp.utilities.NetworkUtil.NETWORK_STATUS_INTERNET_CONNECTION_OK;
 
 public class MetarDataManager {
@@ -36,13 +45,13 @@ public class MetarDataManager {
     private static final int CORE_POOL_SIZE = 8;
     private static final int MAXIMUM_POOL_SIZE = 8;
 
-    private static int NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors();
     private final BlockingQueue<Runnable> mDownloadWorkQueue;
     private final Queue<MetarDataTask> mMetarDataTaskWorkQueue;
     private final ThreadPoolExecutor mDownloadThreadPool;
     private Handler mHandler;
     private static MetarDataManager sInstance = null;
     private HashMap<String, String> mMetarHashMap;
+    private String[] mStationList;
     private int completedThreadCount = 0;
     AtomicInteger mDownloadStatus = new AtomicInteger();
 
@@ -59,6 +68,8 @@ public class MetarDataManager {
         mDownloadThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
                 KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mDownloadWorkQueue);
         mDownloadStatus.set(DOWNLOAD_COMPLETE);
+        registerNetworkReceiver();
+        startMetarService();
 
         mHandler = new Handler(Looper.getMainLooper()) {
 
@@ -89,9 +100,48 @@ public class MetarDataManager {
                 }
             }
         };
+        savePredefinedStationsToMap();
         new ScheduledDownloadManager().startSchedular();
     }
-    
+
+    private void registerNetworkReceiver() {
+        NetworkReceiver networkReceiver = new NetworkReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(MetarService.ACTION_LIST_FETCH_RESPONSE);
+        LocalBroadcastManager.getInstance(MetarBrowserApp.getInstance().getApplicationContext()).registerReceiver(networkReceiver, filter);
+    }
+
+    private class NetworkReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(MetarService.ACTION_LIST_FETCH_RESPONSE)) {
+                String[] stationArray = intent.getStringArrayExtra(EXTRA_STATION_LIST);
+//                if (stationArray.length != 0)
+//                    savePredefinedStationsToMap(stationArray);
+            }
+        }
+    }
+
+    public void startMetarService(){
+        Intent cbIntent =  new Intent();
+        cbIntent.setClass(MetarBrowserApp.getInstance().getApplicationContext(), MetarService.class);
+        cbIntent.putExtra(MetarService.SERVICE_ACTION, MetarService.FETCH_GERMAN_STATION_LIST);
+        MetarBrowserApp.getInstance().getApplicationContext().startService(cbIntent);
+    }
+
+    private void savePredefinedStationsToMap() {
+        Resources res = MetarBrowserApp.getResourceses();
+        String[] germanStations = res.getStringArray(R.array.station_icao_code_list);
+//        mStationList = germanStations;
+        for (String station : germanStations) {
+            mMetarHashMap.put(station, "");
+        }
+    }
+
+    public String[] getStationList() {
+        return mStationList;
+    }
+
     private void onUpdateCacheCompleted() {
         Log.i(TAG, "onUpdateCacheCompleted: ");
         completedThreadCount = 0;
@@ -205,7 +255,7 @@ public class MetarDataManager {
                     values.put(MetarContentProvider.COLUMN_CODE, code);
                     values.put(MetarContentProvider.COLUMN_DATA, decodedData);
 
-                    new MetarHandler(this, AppController.getInstance().getApplicationContext().getContentResolver()).startInsert(0, null, MetarContentProvider.CONTENT_URI, values);
+                    new MetarHandler(this, MetarBrowserApp.getInstance().getApplicationContext().getContentResolver()).startInsert(0, null, MetarContentProvider.CONTENT_URI, values);
                     mMetarHashMap.put(code, decodedData);
 
                 } else {
@@ -218,7 +268,7 @@ public class MetarDataManager {
                         ContentValues values = new ContentValues();
                         values.put(MetarContentProvider.COLUMN_DATA, decodedData);
 
-                        new MetarHandler(this, AppController.getInstance().getApplicationContext().getContentResolver()).startUpdate(0,
+                        new MetarHandler(this, MetarBrowserApp.getInstance().getApplicationContext().getContentResolver()).startUpdate(0,
                                 null,
                                 MetarContentProvider.CONTENT_URI,
                                 values,

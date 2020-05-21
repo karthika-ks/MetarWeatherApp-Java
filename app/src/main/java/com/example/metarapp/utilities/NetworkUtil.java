@@ -14,6 +14,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.example.metarapp.model.MetarService.EXTRA_CODE;
 import static com.example.metarapp.model.MetarService.EXTRA_DECODED_DATA;
@@ -98,4 +102,39 @@ public class NetworkUtil {
         }
         return bundle;
     }
+
+    public List<String> parseStationNamesFromUrl() throws IOException{
+        Log.i(TAG, "parseStationNamesFromUrl: ");
+        URL url = new URL("https://tgftp.nws.noaa.gov/data/observations/metar/decoded/");
+        List<String> array = new ArrayList<>();
+        List<String> codeArray = new ArrayList<>();
+
+        InputStream inputStream = NetworkUtil.getHttpConnection(url).getInputStream();
+        if (inputStream != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                array.add(line);
+            }
+            reader.close();
+        }
+
+        //Read station name from array
+        for (String station : array) {
+            Pattern p = Pattern.compile(".*\"(.*)[.].*");
+            Matcher m = p.matcher(station);
+
+            if (m.find()) {
+                for (int i=1;i<=m.groupCount();i++) {
+                    String code = m.group(i).replaceAll(">", "");
+                    if (code.startsWith("ED")) {
+                        Log.i(TAG, "parseStationNamesFromUrl: <<<<<<<<<<<<<<<<<< " + code);
+                        codeArray.add(code);
+                    }
+                    }
+                }
+            }
+        return codeArray;
+        }
 }

@@ -3,9 +3,10 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
+        <import type="android.view.View"/>
         <variable
                 name="viewModel"
-                type="com.example.metarapp.viewmodel.MetarViewModel" />
+            type="com.example.metarapp.viewmodel.MetarViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -21,17 +22,20 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:text="CODE"
+                android:text="STATION"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/airport_code"/>
+                android:id="@+id/airport_code"
+                android:textStyle="bold"
+                android:textSize="15sp"/>
             <EditText
                 android:id="@+id/edit_code"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:hint="ICAO Code"
                 android:layout_marginStart="10dp"
-                android:text="@={viewModel.mCode}"/>
+                android:text="@={viewModel.mEditTextCodeEntry}"
+                android:afterTextChanged="@{viewModel.onTextChanged}"/>
             <Button
                 android:id="@+id/btn_get_metar"
                 android:layout_width="wrap_content"
@@ -40,23 +44,13 @@
                 android:onClick="@{()-> viewModel.onSendClicked()}"/>
         </LinearLayout>
 
-    <TextView
-            android:id="@+id/txt_metar_data"
+        <include
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/lyt_edit_code"
-            android:layout_marginTop="20dp"
-            android:text="@{viewModel.decodedData}"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginBottom="50dp"
-        android:text="Update Cache"
-        android:onClick="@{()-> viewModel.onUpdateCacheClicked()}"/>
+            layout="@layout/layout_metar_data_details"
+            app:viewModel="@{viewModel}"
+            app:layout_constraintTop_toBottomOf="@+id/lyt_edit_code"
+            android:layout_marginTop="20dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

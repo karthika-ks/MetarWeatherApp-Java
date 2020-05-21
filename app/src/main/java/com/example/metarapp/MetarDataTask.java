@@ -18,6 +18,7 @@ import static com.example.metarapp.model.MetarService.EXTRA_DECODED_DATA;
 import static com.example.metarapp.model.MetarService.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.NetworkUtil.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.NetworkUtil.NETWORK_STATUS_INTERNET_CONNECTION_OK;
+import static com.example.metarapp.utilities.NetworkUtil.NETWORK_STATUS_NO_INTERNET_CONNECTION;
 
 public class MetarDataTask implements MetarDataDownloadRunnable.TaskRunnableDownloadMethods {
 
@@ -60,7 +61,15 @@ public class MetarDataTask implements MetarDataDownloadRunnable.TaskRunnableDown
         Log.i(TAG, "downloadMetarData: code " + code);
         Bundle metarData;
         try {
-            metarData = readDecodedDataFromUrl(code);
+            if (new NetworkUtil().isNetworkConnected(MetarBrowserApp.getInstance().getApplicationContext())) {
+                metarData = readDecodedDataFromUrl(code);
+            } else {
+                metarData = new Bundle();
+                metarData.putString(EXTRA_CODE, code);
+                metarData.putString(EXTRA_DECODED_DATA, "");
+                metarData.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
+                Log.i(TAG, "downloadMetarData: No internet connection");
+            }
 
         } catch (IOException e) {
             Log.e(TAG, "downloadMetarData: ", e);
