@@ -21,6 +21,8 @@ import static com.example.metarapp.utilities.Constants.ACTION_NETWORK_RESPONSE;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FETCH_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
@@ -37,6 +39,7 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     public MutableLiveData<Boolean> isStationAvailable = new MutableLiveData<>();
     public MutableLiveData<Boolean> isDownloadProgress = new MutableLiveData<>();
     public MutableLiveData<String> mICAOCode = new MutableLiveData<>();
+    public MutableLiveData<String> mRawData = new MutableLiveData<>();
 
     static final String TAG = "MetarViewModel";
     private Context context;
@@ -64,7 +67,7 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         LocalBroadcastManager.getInstance(context).registerReceiver(networkReceiver, filter);
     }
 
-    private void updateUi(String code, String decodedData, int networkStatus) {
+    private void updateUi(String code, String decodedData, int networkStatus, String rawData) {
         isDownloadProgress.setValue(false);
         mICAOCode.setValue(code);
 
@@ -74,15 +77,23 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
                 break;
             case NETWORK_STATUS_NO_INTERNET_CONNECTION:
                 hasNetworkConnectivity.setValue(false);
-                String cache = MetarDataManager.getInstance().getIfCachedDataAvailable(code);
-                if (cache != null && !cache.isEmpty()) {
+
+                Bundle cache = MetarDataManager.getInstance().getIfCachedDataAvailable(code);
+
+                if (cache != null) {
+                    String cachedData = cache.getString(EXTRA_DECODED_DATA);
+                    String cachedRawData = cache.getString(EXTRA_RAW_DATA);
+
+                    if (cachedData != null && !cachedData.isEmpty())
                     detailedViewVisibility.setValue(true);
                     hasCachedDataAvailability.setValue(true);
-                    mDecodedData.setValue(cache);
+                    mDecodedData.setValue(cachedData);
+                    mRawData.setValue(cachedRawData);
                 }
                 break;
             case NETWORK_STATUS_INTERNET_CONNECTION_OK:
                 mDecodedData.setValue(decodedData);
+                mRawData.setValue(rawData);
                 detailedViewVisibility.setValue(true);
                 break;
         }
@@ -135,7 +146,9 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
                 String decodedData = intent.getStringExtra(EXTRA_DECODED_DATA);
                 String code = intent.getStringExtra(EXTRA_CODE);
                 int networkStatus = intent.getIntExtra(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
-                updateUi(code, decodedData, networkStatus);
+                String stationName = intent.getStringExtra(EXTRA_STATION_NAME);
+                String rawData = intent.getStringExtra(EXTRA_RAW_DATA);
+                updateUi(code, decodedData, networkStatus, rawData);
 
                 if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
 
@@ -143,6 +156,8 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
                     bundle.putString(EXTRA_CODE, code);
                     bundle.putString(EXTRA_DECODED_DATA, decodedData);
                     bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
+                    bundle.putString(EXTRA_STATION_NAME, stationName);
+                    bundle.putString(EXTRA_RAW_DATA, rawData);
 
                     MetarDataManager.getInstance().saveMetarDataDownloaded(bundle);
 

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.example.metarapp.R;
+import com.example.metarapp.model.MetarDataManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ public class StationListAdapter extends ArrayAdapter {
 
     static class StationViewHolder {
         TextView stationCode;
+        TextView stationName;
     }
 
     StationListAdapter(Context context, int textViewResourceId) {
@@ -58,6 +60,7 @@ public class StationListAdapter extends ArrayAdapter {
             row = inflater.inflate(R.layout.station_list_item_card, parent, false);
             viewHolder = new StationViewHolder();
             viewHolder.stationCode = row.findViewById(R.id.station_code);
+            viewHolder.stationName = row.findViewById(R.id.station_name);
             row.setTag(viewHolder);
 
         } else {
@@ -65,6 +68,10 @@ public class StationListAdapter extends ArrayAdapter {
         }
         String code = getItem(position);
         viewHolder.stationCode.setText(code);
+        String stationName = MetarDataManager.getInstance().getStationNameFromCode(code);
+        if (stationName != null && !stationName.isEmpty()) {
+            viewHolder.stationName.setText(stationName);
+        }
         return row;
     }
 }

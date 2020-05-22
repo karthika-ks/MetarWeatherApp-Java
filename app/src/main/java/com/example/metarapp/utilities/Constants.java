@@ -13,6 +13,8 @@ public final class Constants {
     public static final String EXTRA_CODE = "code";
     public static final String EXTRA_DECODED_DATA = "decoded_data";
     public static final String EXTRA_NETWORK_STATUS = "network_status";
+    public static final String EXTRA_STATION_NAME = "station_name";
+    public static final String EXTRA_RAW_DATA = "raw_data";
     public static final String EXTRA_STATION_LIST = "station_list";
 
     public static final int KEEP_ALIVE_TIME = 10;

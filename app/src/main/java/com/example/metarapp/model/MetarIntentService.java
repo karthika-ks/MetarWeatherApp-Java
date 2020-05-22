@@ -21,14 +21,13 @@ import static com.example.metarapp.utilities.Constants.DOWNLOAD_STARTED;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_STATION_LIST;
+import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FETCH_GERMAN_STATION_LIST;
 import static com.example.metarapp.utilities.Constants.FETCH_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_NO_INTERNET_CONNECTION;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_DOWNLOAD_STATUS;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_AVAILABLE;
-import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 import static com.example.metarapp.utilities.Constants.SERVICE_ACTION;
 
 public class MetarIntentService extends IntentService {
@@ -62,19 +61,23 @@ public class MetarIntentService extends IntentService {
             try {
 
                 if (!new NetworkUtil().isNetworkConnected(getApplicationContext())) {
-                    sendMetarDetailsFromServer(code, "", NETWORK_STATUS_NO_INTERNET_CONNECTION);
+                    sendMetarDetailsFromServer(code, "", NETWORK_STATUS_NO_INTERNET_CONNECTION, "", "");
                 } else {
                     metarData = requestMetarDataFromServer(code);
-                    sendMetarDetailsFromServer(code, metarData.getString(EXTRA_DECODED_DATA), metarData.getInt(EXTRA_NETWORK_STATUS));
+                    sendMetarDetailsFromServer(code
+                            , metarData.getString(EXTRA_DECODED_DATA)
+                            , metarData.getInt(EXTRA_NETWORK_STATUS)
+                            , metarData.getString(EXTRA_RAW_DATA)
+                            , metarData.getString(EXTRA_STATION_NAME));
                 }
 
             } catch (IOException e) {
-                sendMetarDetailsFromServer(code, "", NETWORK_STATUS_AIRPORT_NOT_FOUND);
+                sendMetarDetailsFromServer(code, "", NETWORK_STATUS_AIRPORT_NOT_FOUND, "", "");
             }
         }
     }
 
-    private void sendMetarDetailsFromServer(String code, String decodedData, int networkStatus) {
+    private void sendMetarDetailsFromServer(String code, String decodedData, int networkStatus, String rawData, String stationName) {
         Log.i(TAG, "sendMetarDetailsFromServer: Code " + code);
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MetarBrowserApp.getInstance().getApplicationContext());
         Intent intent = new Intent();
@@ -82,6 +85,8 @@ public class MetarIntentService extends IntentService {
         intent.putExtra(EXTRA_CODE, code);
         intent.putExtra(EXTRA_DECODED_DATA, decodedData);
         intent.putExtra(EXTRA_NETWORK_STATUS, networkStatus);
+        intent.putExtra(EXTRA_RAW_DATA, rawData);
+        intent.putExtra(EXTRA_STATION_NAME, stationName);
         localBroadcastManager.sendBroadcast(intent);
     }
 

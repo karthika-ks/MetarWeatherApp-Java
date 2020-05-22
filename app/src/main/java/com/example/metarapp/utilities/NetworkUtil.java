@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
+import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FILTER_STRING_GERMAN;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
@@ -95,8 +97,18 @@ public class NetworkUtil {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
                 String line = "";
+                reader.mark(1000);
+
+                if ((line = reader.readLine()) != null) {
+                    bundle.putString(EXTRA_STATION_NAME, line);
+                    reader.reset();
+                }
+
                 while ((line = reader.readLine()) != null) {
                     builder.append(line).append('\n');
+                    if (line.startsWith("ob:")) {
+                        bundle.putString(EXTRA_RAW_DATA, line);
+                    }
                 }
                 reader.close();
 
