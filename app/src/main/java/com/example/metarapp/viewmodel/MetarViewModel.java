@@ -16,13 +16,12 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.model.MetarIntentService;
+import com.example.metarapp.utilities.MetarData;
 
 import static com.example.metarapp.utilities.Constants.ACTION_NETWORK_RESPONSE;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
-import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
-import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
-import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FETCH_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
@@ -41,7 +40,7 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     public MutableLiveData<String> mICAOCode = new MutableLiveData<>();
     public MutableLiveData<String> mRawData = new MutableLiveData<>();
 
-    static final String TAG = "MetarViewModel";
+    private static final String TAG = "MetarViewModel";
     private Context context;
     private static MetarViewModel sInstance;
 
@@ -67,9 +66,9 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         LocalBroadcastManager.getInstance(context).registerReceiver(networkReceiver, filter);
     }
 
-    private void updateUi(String code, String decodedData, int networkStatus, String rawData) {
+    private void updateUi(int networkStatus, MetarData metarData) {
         isDownloadProgress.setValue(false);
-        mICAOCode.setValue(code);
+        mICAOCode.setValue(metarData.getCode());
 
         switch (networkStatus) {
             case NETWORK_STATUS_AIRPORT_NOT_FOUND:
@@ -78,22 +77,22 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
             case NETWORK_STATUS_NO_INTERNET_CONNECTION:
                 hasNetworkConnectivity.setValue(false);
 
-                Bundle cache = MetarDataManager.getInstance().getIfCachedDataAvailable(code);
+                MetarData cache = MetarDataManager.getInstance().getIfCachedDataAvailable(metarData.getCode());
 
                 if (cache != null) {
-                    String cachedData = cache.getString(EXTRA_DECODED_DATA);
-                    String cachedRawData = cache.getString(EXTRA_RAW_DATA);
+                    String cachedData = cache.getDecodedData();
+                    String cachedRawData = cache.getRawData();
 
                     if (cachedData != null && !cachedData.isEmpty())
-                    detailedViewVisibility.setValue(true);
+                        detailedViewVisibility.setValue(true);
                     hasCachedDataAvailability.setValue(true);
                     mDecodedData.setValue(cachedData);
                     mRawData.setValue(cachedRawData);
                 }
                 break;
             case NETWORK_STATUS_INTERNET_CONNECTION_OK:
-                mDecodedData.setValue(decodedData);
-                mRawData.setValue(rawData);
+                mDecodedData.setValue(metarData.getDecodedData());
+                mRawData.setValue(metarData.getRawData());
                 detailedViewVisibility.setValue(true);
                 break;
         }
@@ -138,29 +137,21 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     }
 
     private class NetworkReceiver extends BroadcastReceiver {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i(TAG, "onReceive: ");
             if (intent.getAction().equals(ACTION_NETWORK_RESPONSE)) {
 
-                String decodedData = intent.getStringExtra(EXTRA_DECODED_DATA);
-                String code = intent.getStringExtra(EXTRA_CODE);
                 int networkStatus = intent.getIntExtra(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
-                String stationName = intent.getStringExtra(EXTRA_STATION_NAME);
-                String rawData = intent.getStringExtra(EXTRA_RAW_DATA);
-                updateUi(code, decodedData, networkStatus, rawData);
+                MetarData metarData = intent.getParcelableExtra(EXTRA_METAR_DATA);
 
-                if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
+                if (metarData != null) {
+                    updateUi(networkStatus, metarData);
 
-                    Bundle bundle = new Bundle();
-                    bundle.putString(EXTRA_CODE, code);
-                    bundle.putString(EXTRA_DECODED_DATA, decodedData);
-                    bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
-                    bundle.putString(EXTRA_STATION_NAME, stationName);
-                    bundle.putString(EXTRA_RAW_DATA, rawData);
-
-                    MetarDataManager.getInstance().saveMetarDataDownloaded(bundle);
-
+                    if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
+                        MetarDataManager.getInstance().saveMetarDataDownloaded(networkStatus, metarData);
+                    }
                 }
             }
         }

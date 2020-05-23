@@ -1,11 +1,15 @@
 package com.example.metarapp.model.scheduler;
 
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.metarapp.MetarBrowserApp;
 import com.example.metarapp.model.MetarDataManager;
+import com.example.metarapp.utilities.MetarData;
 
 import java.util.HashMap;
 import java.util.Queue;
@@ -16,12 +20,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.example.metarapp.utilities.Constants.CORE_POOL_SIZE;
 import static com.example.metarapp.utilities.Constants.DOWNLOAD_COMPLETE;
 import static com.example.metarapp.utilities.Constants.DOWNLOAD_STARTED;
+import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.KEEP_ALIVE_TIME;
 import static com.example.metarapp.utilities.Constants.KEEP_ALIVE_TIME_UNIT;
 import static com.example.metarapp.utilities.Constants.MAXIMUM_POOL_SIZE;
+import static com.example.metarapp.utilities.Constants.PREF_KEY_UPDATE_STATUS;
+import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 
 public class DataDownloadManager {
     private static final String TAG = DataDownloadManager.class.getSimpleName();
@@ -69,7 +78,10 @@ public class DataDownloadManager {
                         Log.i(TAG, "handleMessage: Download for station " + stationCode + " has completed");
                         recycleTask(dataDownloadTask);
                         // Save data to DB and to list
-                        MetarDataManager.getInstance().saveMetarDataDownloaded(dataDownloadTask.getMetarData());
+                        Bundle bundle = dataDownloadTask.getMetarData();
+                        MetarData metarData = bundle.getParcelable(EXTRA_METAR_DATA);
+                        MetarDataManager.getInstance().saveMetarDataDownloaded(bundle.getInt(EXTRA_NETWORK_STATUS), metarData);
+
                         completedThreadCount++;
 
                         if (completedThreadCount == MetarDataManager.getInstance().getMetarHashMap().size())
@@ -109,6 +121,11 @@ public class DataDownloadManager {
         Log.i(TAG, "onUpdateCacheCompleted: ");
         completedThreadCount = 0;
         mDownloadStatus.set(DOWNLOAD_COMPLETE);
+
+        SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED);
+        editor.apply();
     }
 
     void updateCache() {
@@ -117,6 +134,11 @@ public class DataDownloadManager {
         if (!availableStations.isEmpty()) {
 
             mDownloadStatus.set(DOWNLOAD_STARTED);
+
+            SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED);
+            editor.apply();
 
             for (String stationCode : availableStations) {
                 startDownload(stationCode);

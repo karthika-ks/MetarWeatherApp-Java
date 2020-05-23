@@ -16,6 +16,7 @@ public final class Constants {
     public static final String EXTRA_STATION_NAME = "station_name";
     public static final String EXTRA_RAW_DATA = "raw_data";
     public static final String EXTRA_STATION_LIST = "station_list";
+    public static final String EXTRA_METAR_DATA = "metar_data";
 
     public static final int KEEP_ALIVE_TIME = 10;
     public static final TimeUnit KEEP_ALIVE_TIME_UNIT =  TimeUnit.SECONDS;
@@ -28,10 +29,13 @@ public final class Constants {
     public static final String PREF_NAME_GERMAN_LIST = "GERMAN_LIST_STATUS";
     public static final String PREF_KEY_IS_AVAILABLE = "IS_AVAILABLE";
     public static final String PREF_KEY_DOWNLOAD_STATUS = "DOWNLOAD_STATUS";
+    public static final String PREF_KEY_UPDATE_STATUS = "UPDATE_STATUS";
 
     public static final int NETWORK_STATUS_NO_INTERNET_CONNECTION = 0;
     public static final int NETWORK_STATUS_INTERNET_CONNECTION_OK = 1;
     public static final int NETWORK_STATUS_AIRPORT_NOT_FOUND = 2;
 
     public static final String FILTER_STRING_GERMAN = "ED";
+
+    public static final String METAR_LABEL_RAW_DATA = "ob:";
 }

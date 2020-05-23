@@ -4,12 +4,14 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.example.metarapp.MetarBrowserApp;
+import com.example.metarapp.utilities.MetarData;
 import com.example.metarapp.utilities.NetworkUtil;
 
 import java.io.IOException;
 
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_NO_INTERNET_CONNECTION;
@@ -53,13 +55,16 @@ public class DataDownloadTask implements DataDownloadRunnable.TaskRunnableDownlo
     public Bundle downloadMetarData(String code) {
         Log.i(TAG, "downloadMetarData: code " + code);
         Bundle metarData;
+        MetarData data = new MetarData();
+        data.setCode(code);
+
         try {
             if (new NetworkUtil().isNetworkConnected(MetarBrowserApp.getInstance().getApplicationContext())) {
                 metarData = NetworkUtil.readDecodedDataFromServer(code);
             } else {
+
                 metarData = new Bundle();
-                metarData.putString(EXTRA_CODE, code);
-                metarData.putString(EXTRA_DECODED_DATA, "");
+                metarData.putParcelable(EXTRA_METAR_DATA, data);
                 metarData.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
                 Log.i(TAG, "downloadMetarData: No internet connection");
             }
@@ -67,8 +72,7 @@ public class DataDownloadTask implements DataDownloadRunnable.TaskRunnableDownlo
         } catch (IOException e) {
             Log.e(TAG, "downloadMetarData: ", e);
             metarData = new Bundle();
-            metarData.putString(EXTRA_CODE, code);
-            metarData.putString(EXTRA_DECODED_DATA, "");
+            metarData.putParcelable(EXTRA_METAR_DATA, data);
             metarData.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);
         }
         return metarData;

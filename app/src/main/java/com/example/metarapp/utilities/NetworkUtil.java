@@ -21,10 +21,12 @@ import java.util.regex.Pattern;
 
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
+import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FILTER_STRING_GERMAN;
+import static com.example.metarapp.utilities.Constants.METAR_LABEL_RAW_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
 
@@ -86,8 +88,9 @@ public class NetworkUtil {
         Log.i(TAG, "readDecodedDataFromServer: Code " + code);
 
         URL url = getDecodedDataUrl(code);
-        StringBuilder builder = new StringBuilder();
         Bundle bundle = new Bundle();
+        MetarData data = new MetarData();
+        data.setCode(code);
 
         try {
 
@@ -95,37 +98,58 @@ public class NetworkUtil {
 
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                data = getMetarData(reader, code);
+                Log.i(TAG, "readDecodedDataFromServer: " + data.toString());
 
-                String line = "";
-                reader.mark(1000);
-
-                if ((line = reader.readLine()) != null) {
-                    bundle.putString(EXTRA_STATION_NAME, line);
-                    reader.reset();
-                }
-
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line).append('\n');
-                    if (line.startsWith("ob:")) {
-                        bundle.putString(EXTRA_RAW_DATA, line);
-                    }
-                }
-                reader.close();
-
-                Log.i(TAG, "readDecodedDataFromServer: Code " + code + ", Response - " + builder.toString());
-                bundle.putString(EXTRA_CODE, code);
-                bundle.putString(EXTRA_DECODED_DATA, builder.toString());
+                bundle.putParcelable(EXTRA_METAR_DATA, data);
                 bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
             }
         } catch (FileNotFoundException e) {
 //            Log.e(TAG, "readDecodedDataFromServer: FileNotFoundException", e);
-            bundle.putString(EXTRA_CODE, code);
-            bundle.putString(EXTRA_DECODED_DATA, "");
+            bundle.putParcelable(EXTRA_METAR_DATA, data);
             bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);
             return bundle;
         }
 
         return bundle;
+    }
+
+    private static MetarData getMetarData(BufferedReader reader, String code) throws IOException {
+        MetarData data = new MetarData();
+        String line = "";
+        StringBuilder builder = new StringBuilder();
+
+        data.setCode(code);
+
+        reader.mark(1000);
+
+        if ((line = reader.readLine()) != null) {
+            builder.append(line).append('\n');
+            if (line.indexOf('(') != -1) {
+                String stationName = line.substring(0, line.indexOf('('));
+                data.setStationName(stationName);
+            } else {
+                data.setStationName("Unknown Station");
+            }
+        }
+
+        if ((line = reader.readLine()) != null) {
+            builder.append(line).append('\n');
+            data.setLastUpdatedTime(line);
+        }
+
+        while ((line = reader.readLine()) != null) {
+            builder.append(line).append('\n');
+
+            if (line.startsWith(METAR_LABEL_RAW_DATA)) {
+                String rawData = line.substring(METAR_LABEL_RAW_DATA.length() + 1);
+                data.setRawData(rawData);
+            }
+        }
+        reader.close();
+
+        data.setDecodedData(builder.toString());
+        return data;
     }
 
     public List<String> parseStationNamesFromServer() throws IOException{
