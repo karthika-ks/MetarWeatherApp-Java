@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-        xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <import type="android.view.View"/>
@@ -10,9 +10,8 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <RelativeLayout
             android:id="@+id/app_label"
@@ -33,53 +32,51 @@
 
         </RelativeLayout>
 
-        <LinearLayout
-            android:id="@+id/lyt_edit_code"
+        <RelativeLayout
+            android:id="@+id/lyt_search_bar"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:weightSum="3"
-            android:gravity="center_vertical"
+            android:layout_height="70dp"
+            app:layout_constraintTop_toBottomOf="@+id/app_label"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp">
+
+            <TextView
+                android:id="@+id/label_selection_station"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Station"
+                android:textSize="15sp"
+                android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/spinner"
+                style="@android:style/Widget.Spinner.DropDown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"/>
+
+        </RelativeLayout>
+
+        <ProgressBar
+            android:id="@+id/progress_list_download"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="50dp"
-            android:focusable="true"
-            android:focusableInTouchMode="true">
-
-            <EditText
-                android:id="@+id/edit_code"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="2.5"
-                android:layout_marginStart="10dp"
-                android:text="@={viewModel.mEditTextCodeEntry}"
-                android:hint="ICAO Station Code"
-                android:maxLines="1"
-                android:scrollHorizontally="true"
-                android:ellipsize="end"
-                android:inputType="text"
-                android:background="@android:drawable/editbox_background_normal"/>
-
-            <ImageButton
-                android:id="@+id/btn_get_metar"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="0.5"
-                android:background="@android:drawable/dialog_holo_dark_frame"
-                android:src="@drawable/img_search"
-                android:onClick="@{()-> viewModel.onSendClicked()}"/>
-
-        </LinearLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:visibility="gone"/>
 
         <RelativeLayout
+            android:id="@+id/lyt_details_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/include2"
-            app:layout_constraintTop_toBottomOf="@id/lyt_edit_code">
+            app:layout_constraintTop_toBottomOf="@id/lyt_search_bar">
 
             <include
-                android:id="@+id/lyt_details_view"
                 layout="@layout/layout_metar_data_details"
                 app:viewModel="@{viewModel}"
                 android:layout_width="match_parent"
@@ -96,5 +93,5 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

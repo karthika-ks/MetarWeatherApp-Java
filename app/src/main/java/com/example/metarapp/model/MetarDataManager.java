@@ -129,6 +129,7 @@ public class MetarDataManager {
                 metarData.setStationName(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_STATION_NAME)));
                 metarData.setDecodedData(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_DATA)));
                 metarData.setRawData(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_RAW_DATA)));
+                metarData.setLastUpdatedTime(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_LAST_UPDATED_TIME)));
 
                 mMetarDataHashMap.put(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_CODE)),metarData);
 
@@ -152,7 +153,7 @@ public class MetarDataManager {
         }
     }
 
-    private boolean checkIfExist(String code) {
+    public boolean checkIfExist(String code) {
         if (mMetarDataHashMap.get(code) != null
                 && !Objects.requireNonNull(Objects.requireNonNull(mMetarDataHashMap.get(code)).getRawData().isEmpty())) {
             return true;
@@ -179,6 +180,7 @@ public class MetarDataManager {
             String decodedData = metarData.getDecodedData();
             String stationName = metarData.getStationName();
             String rawData = metarData.getRawData();
+            String lastUpdatedTime = metarData.getLastUpdatedTime();
 
             if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
 
@@ -189,6 +191,7 @@ public class MetarDataManager {
                     values.put(MetarContentProvider.COLUMN_DATA, decodedData);
                     values.put(MetarContentProvider.COLUMN_RAW_DATA, rawData);
                     values.put(MetarContentProvider.COLUMN_STATION_NAME, stationName);
+                    values.put(MetarContentProvider.COLUMN_LAST_UPDATED_TIME, lastUpdatedTime);
 
                     new MetarAsyncQueryHandler(this, MetarBrowserApp.getInstance().getApplicationContext().getContentResolver())
                             .startInsert(0, null, MetarContentProvider.CONTENT_URI, values);
@@ -206,6 +209,7 @@ public class MetarDataManager {
                         values.put(MetarContentProvider.COLUMN_DATA, decodedData);
                         values.put(MetarContentProvider.COLUMN_RAW_DATA, rawData);
                         values.put(MetarContentProvider.COLUMN_STATION_NAME, stationName);
+                        values.put(MetarContentProvider.COLUMN_LAST_UPDATED_TIME, lastUpdatedTime);
 
                         new MetarAsyncQueryHandler(this, MetarBrowserApp.getInstance().getApplicationContext().getContentResolver())
                                 .startUpdate(0,

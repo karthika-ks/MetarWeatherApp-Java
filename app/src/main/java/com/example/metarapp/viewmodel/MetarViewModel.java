@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -14,10 +16,13 @@ import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ViewModel;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.example.metarapp.MetarBrowserApp;
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.model.MetarIntentService;
 import com.example.metarapp.utilities.MetarData;
+import com.example.metarapp.utilities.NetworkUtil;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
 import static com.example.metarapp.utilities.Constants.ACTION_NETWORK_RESPONSE;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
@@ -39,10 +44,13 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     public MutableLiveData<Boolean> isDownloadProgress = new MutableLiveData<>();
     public MutableLiveData<String> mICAOCode = new MutableLiveData<>();
     public MutableLiveData<String> mRawData = new MutableLiveData<>();
+    public MutableLiveData<String> mStationName = new MutableLiveData<>();
+    public MutableLiveData<String> mLastUpdatedTime = new MutableLiveData<>();
 
     private static final String TAG = "MetarViewModel";
     private Context context;
     private static MetarViewModel sInstance;
+    private String lastSelectedStationCode = "";
 
     private MetarViewModel(Context context) {
         this.context = context;
@@ -82,17 +90,24 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
                 if (cache != null) {
                     String cachedData = cache.getDecodedData();
                     String cachedRawData = cache.getRawData();
+                    String lastUpdatedTime = cache.getLastUpdatedTime();
+                    String stationName = cache.getStationName();
 
-                    if (cachedData != null && !cachedData.isEmpty())
+                    if (cachedData != null && !cachedData.isEmpty()) {
                         detailedViewVisibility.setValue(true);
-                    hasCachedDataAvailability.setValue(true);
-                    mDecodedData.setValue(cachedData);
-                    mRawData.setValue(cachedRawData);
+                        hasCachedDataAvailability.setValue(true);
+                        mDecodedData.setValue(cachedData);
+                        mRawData.setValue(cachedRawData);
+                        mLastUpdatedTime.setValue(lastUpdatedTime);
+                        mStationName.setValue(stationName);
+                    }
                 }
                 break;
             case NETWORK_STATUS_INTERNET_CONNECTION_OK:
                 mDecodedData.setValue(metarData.getDecodedData());
                 mRawData.setValue(metarData.getRawData());
+                mLastUpdatedTime.setValue(metarData.getLastUpdatedTime());
+                mStationName.setValue(metarData.getStationName());
                 detailedViewVisibility.setValue(true);
                 break;
         }
@@ -106,17 +121,33 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     }
 
     public void onSendClicked() {
-        Log.i(TAG, "onSendClicked: Code = " + mEditTextCodeEntry.getValue());
-        startMetarService(mEditTextCodeEntry.getValue().toUpperCase());
+        if (mEditTextCodeEntry.getValue() != null && !mEditTextCodeEntry.getValue().isEmpty()) {
+            Log.i(TAG, "onSendClicked: Code = " + mEditTextCodeEntry.getValue());
+            startMetarService(mEditTextCodeEntry.getValue().toUpperCase());
+        }
+    }
+
+    public void onRefreshClicked() {
+        Log.i(TAG, "onRefreshClicked: ");
+        if (!lastSelectedStationCode.isEmpty())
+            startMetarService(lastSelectedStationCode);
     }
 
     public void startMetarService(String code) {
+        lastSelectedStationCode = code;
         startBusyIndicator();
         Intent cbIntent =  new Intent();
         cbIntent.setClass(context, MetarIntentService.class);
         cbIntent.putExtra(EXTRA_CODE, code);
         cbIntent.putExtra(SERVICE_ACTION, FETCH_METAR_DATA);
         context.startService(cbIntent);
+
+        if (MetarDataManager.getInstance().checkIfExist(code)) {
+            MetarData metarData = MetarDataManager.getInstance().getIfCachedDataAvailable(code);
+            if (metarData != null) {
+                updateUi(NETWORK_STATUS_INTERNET_CONNECTION_OK, metarData);
+            }
+        }
     }
 
     public void registerLifeCycleObserver(Lifecycle lifecycle) {
@@ -128,12 +159,15 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         Log.i(TAG, "clearMutableValues: ");
         mDecodedData.setValue("");
         mICAOCode.setValue("");
+        mStationName.setValue("");
+        mLastUpdatedTime.setValue("");
         mEditTextCodeEntry.setValue("");
         detailedViewVisibility.setValue(false);
         hasNetworkConnectivity.setValue(true);
         hasCachedDataAvailability.setValue(false);
         isStationAvailable.setValue(true);
         isDownloadProgress.setValue(false);
+        lastSelectedStationCode = "";
     }
 
     private class NetworkReceiver extends BroadcastReceiver {

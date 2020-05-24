@@ -22,7 +22,7 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     public void onSearchFromGermanStation(View v) {
-        Intent intent = new Intent(this, StationListActivity.class);
+        Intent intent = new Intent(this, SearchFromListActivity.class);
         startActivity(intent);
     }
 }

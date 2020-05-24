@@ -124,7 +124,7 @@ public class DataDownloadManager {
 
         SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED);
+        editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_COMPLETE);
         editor.apply();
     }
 

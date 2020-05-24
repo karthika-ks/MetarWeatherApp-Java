@@ -21,18 +21,9 @@
 
         <activity android:name=".view.SearchByCodeActivity"
             android:launchMode="singleTop">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
         </activity>
 
-        <activity android:name=".view.StationListActivity"
-            android:launchMode="singleTop">
-        </activity>
-
-        <activity android:name=".view.StationDetailsActivity"
+        <activity android:name=".view.SearchFromListActivity"
             android:launchMode="singleTop">
         </activity>
 

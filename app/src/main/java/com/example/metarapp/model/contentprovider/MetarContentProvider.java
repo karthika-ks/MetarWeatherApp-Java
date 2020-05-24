@@ -117,17 +117,21 @@ public class MetarContentProvider extends ContentProvider {
     static final String DATABASE_NAME = "MetarDB";
     static final String TABLE_NAME = "Metar";
     static final int DATABASE_VERSION = 1;
+
     static final String COLUMN_ID = "id";
     public static final String COLUMN_CODE = "code";
     public static final String COLUMN_DATA = "decoded_data";
     public static final String COLUMN_RAW_DATA = "raw_data";
     public static final String COLUMN_STATION_NAME = "station_name";
+    public static final String COLUMN_LAST_UPDATED_TIME = "last_updated_time";
+
     static final String CREATE_DB_TABLE = " CREATE TABLE " + TABLE_NAME
             + " (" + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_CODE + " TEXT NOT NULL, "
             + COLUMN_DATA + " TEXT NOT NULL, "
             + COLUMN_RAW_DATA + " TEXT NOT NULL, "
-            + COLUMN_STATION_NAME + " TEXT NOT NULL);";
+            + COLUMN_STATION_NAME + " TEXT NOT NULL, "
+            + COLUMN_LAST_UPDATED_TIME + " TEXT NOT NULL);";
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
 

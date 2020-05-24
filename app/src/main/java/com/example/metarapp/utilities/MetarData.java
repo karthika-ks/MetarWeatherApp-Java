@@ -3,8 +3,6 @@ package com.example.metarapp.utilities;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import androidx.annotation.NonNull;
-
 public class MetarData implements Parcelable {
     private String code;
     private String stationName;
@@ -86,14 +84,14 @@ public class MetarData implements Parcelable {
         lastUpdatedTime = "";
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Station Details\n").append(code + '\n').append(stationName + '\n')
-                .append(rawData + '\n').append(lastUpdatedTime + '\n').append(decodedData).append("\n*******************************");
-        return builder.toString();
-    }
+//    @NonNull
+//    @Override
+//    public String toString() {
+//        StringBuilder builder = new StringBuilder();
+//        builder.append("Station Details\n").append(code + '\n').append(stationName + '\n')
+//                .append(rawData + '\n').append(lastUpdatedTime + '\n').append(decodedData).append("\n*******************************");
+//        return builder.toString();
+//    }
 
     @Override
     public int describeContents() {

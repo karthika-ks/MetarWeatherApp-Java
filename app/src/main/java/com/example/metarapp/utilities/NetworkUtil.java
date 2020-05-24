@@ -19,12 +19,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
-import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
-import static com.example.metarapp.utilities.Constants.EXTRA_RAW_DATA;
-import static com.example.metarapp.utilities.Constants.EXTRA_STATION_NAME;
 import static com.example.metarapp.utilities.Constants.FILTER_STRING_GERMAN;
 import static com.example.metarapp.utilities.Constants.METAR_LABEL_RAW_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;

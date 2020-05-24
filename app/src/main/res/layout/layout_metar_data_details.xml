@@ -10,8 +10,9 @@
     </data>
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
         <ProgressBar
             android:id="@+id/pBar"
             style="?android:attr/progressBarStyleLarge"
@@ -25,120 +26,162 @@
             android:scrollbars="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@android:drawable/dialog_holo_light_frame"
             android:visibility="@{viewModel.isDownloadProgress ? View.GONE : View.VISIBLE}">
 
-            <androidx.cardview.widget.CardView
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="#E6E6E6"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="8dp">
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/txt_internet_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginTop="20dp"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/holo_red_light"
+                    android:text="@string/txt_no_internet_connectivity"
+                    android:visibility="@{viewModel.hasNetworkConnectivity ? View.GONE : View.VISIBLE}"
+                    android:gravity="center"/>
+
+                <TextView
+                    android:id="@+id/txt_station_availability"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@+id/txt_internet_status"
+                    android:layout_marginTop="20dp"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/holo_red_light"
+                    android:text="@string/txt_airport_not_found"
+                    android:visibility="@{viewModel.isStationAvailable ? View.GONE : View.VISIBLE}"
+                    android:gravity="center"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_height="wrap_content"
+                    android:id="@+id/lyt_detail_view"
                     android:layout_width="match_parent"
-                    android:layout_marginStart="10dp"
-                    android:visibility="visible">
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@+id/txt_internet_status"
+                    android:visibility="@{viewModel.detailedViewVisibility ? View.VISIBLE : View.INVISIBLE}">
 
                     <TextView
-                        android:id="@+id/txt_internet_status"
+                        android:id="@+id/txt_cached_data_status"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
                         android:layout_marginTop="20dp"
+                        app:layout_constraintTop_toTopOf="parent"
                         android:textSize="25sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/holo_red_light"
-                        android:text="@string/txt_no_internet_connectivity"
-                        android:visibility="@{viewModel.hasNetworkConnectivity ? View.GONE : View.VISIBLE}"
+                        android:text="@string/txt_last_available_update"
+                        android:visibility="@{viewModel.hasCachedDataAvailability ? View.VISIBLE : View.GONE}"
                         android:gravity="center"/>
 
                     <TextView
-                        android:id="@+id/txt_station_availability"
+                        android:id="@+id/txt_station_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        android:layout_marginTop="20dp"
+                        android:text="@={viewModel.mStationName}"
                         android:textSize="25sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/holo_red_light"
-                        android:text="@string/txt_airport_not_found"
-                        android:visibility="@{viewModel.isStationAvailable ? View.GONE : View.VISIBLE}"
-                        android:gravity="center"/>
+                        app:layout_constraintTop_toBottomOf="@+id/txt_cached_data_status"
+                        android:gravity="center_horizontal"
+                        android:layout_marginTop="30dp"/>
+
+                    <TextView
+                        android:id="@+id/txt_icao_code"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@={viewModel.mICAOCode}"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        app:layout_constraintTop_toBottomOf="@+id/txt_station_name"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:layout_marginTop="5dp"/>
+
+                    <TextView
+                        android:id="@+id/last_updated_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@={viewModel.mLastUpdatedTime}"
+                        android:textSize="15sp"
+                        android:textStyle="italic"
+                        app:layout_constraintTop_toBottomOf="@+id/txt_icao_code"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:layout_marginTop="5dp"
+                        android:gravity="center_horizontal"/>
 
                     <LinearLayout
-                        android:id="@+id/lyt_detail_view"
+                        android:id="@+id/lyt_decoded_data"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:background="@android:drawable/dialog_holo_light_frame"
                         android:orientation="vertical"
-                        app:layout_constraintTop_toBottomOf="@+id/txt_internet_status"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        android:visibility="@{viewModel.detailedViewVisibility ? View.VISIBLE : View.INVISIBLE}">
+                        app:layout_constraintTop_toBottomOf="@id/last_updated_time"
+                        android:layout_marginTop="30dp">
 
-                        <TextView
-                            android:id="@+id/txt_cached_data_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
-                            android:textSize="25sp"
-                            android:textStyle="bold"
-                            android:text="@string/txt_last_available_update"
-                            android:visibility="@{viewModel.hasCachedDataAvailability ? View.VISIBLE : View.GONE}"
-                            android:gravity="center"/>
-
-                        <TextView
-                            android:id="@+id/txt_icao_code"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@={viewModel.mICAOCode}"
-                            android:textSize="30sp"
-                            android:textStyle="bold"
-                            app:layout_constraintTop_toBottomOf="@+id/txt_cached_data_status"
-                            app:layout_constraintLeft_toLeftOf="parent"
-                            android:layout_marginTop="20dp"/>
-                        <TextView
-                            android:id="@+id/txt_label_raw_data"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/label_raw_data"
-                            android:textSize="25sp"
-                            android:textStyle="bold"
-                            app:layout_constraintTop_toBottomOf="@+id/txt_icao_code"
-                            app:layout_constraintLeft_toLeftOf="parent"
-                            android:layout_marginTop="10dp"/>
-
-                        <TextView
-                            android:id="@+id/txt_raw_data"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@={viewModel.mRawData}"
-                            android:textSize="20sp"
-                            app:layout_constraintTop_toBottomOf="@+id/txt_label_raw_data"
-                            app:layout_constraintLeft_toLeftOf="parent"/>
                         <TextView
                             android:id="@+id/txt_label_decoded_data"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/label_decoded_data"
-                            android:textSize="25sp"
+                            android:text="Decoded Data"
+                            android:textSize="20sp"
                             android:textStyle="bold"
-                            app:layout_constraintTop_toBottomOf="@+id/txt_raw_data"
-                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:gravity="center_horizontal"
                             android:layout_marginTop="10dp"/>
 
                         <TextView
                             android:id="@+id/txt_decoded_data"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@={viewModel.mDecodedData}"
+                            android:textSize="15sp"
+                            android:textStyle="italic"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="10dp"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lyt_raw_data"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/dialog_holo_light_frame"
+                        android:orientation="vertical"
+                        app:layout_constraintTop_toBottomOf="@id/lyt_decoded_data"
+                        android:layout_marginTop="20dp">
+
+                        <TextView
+                            android:id="@+id/txt_label_raw_data"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Decoded Data"
                             android:textSize="20sp"
-                            app:layout_constraintTop_toBottomOf="@+id/txt_label_decoded_data"
-                            app:layout_constraintLeft_toLeftOf="parent"/>
+                            android:textStyle="bold"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:gravity="center_horizontal"
+                            android:layout_marginTop="10dp"/>
+
+                        <TextView
+                            android:id="@+id/txt_raw_data"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@={viewModel.mRawData}"
+                            android:textSize="15sp"
+                            android:textStyle="italic"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:gravity="center_horizontal"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="10dp"/>
+
                     </LinearLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </androidx.cardview.widget.CardView>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
     </RelativeLayout>
 </layout>

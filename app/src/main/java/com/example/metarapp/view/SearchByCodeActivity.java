@@ -5,9 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.EditText;
 
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
 
 import com.example.metarapp.viewmodel.MetarViewModel;
 import com.example.metarapp.R;
@@ -51,6 +53,10 @@ public class SearchByCodeActivity extends AppCompatActivity {
                }
            }
        });
+    }
+
+    public void onHomeClicked(View view) {
+        finish();
     }
 
     @Override
