@@ -29,7 +29,7 @@ public final class Constants {
     public static final int DOWNLOAD_COMPLETE = 1;
 
     public static final String PREF_NAME_GERMAN_LIST = "GERMAN_LIST_STATUS";
-    public static final String PREF_KEY_IS_AVAILABLE = "IS_AVAILABLE";
+    public static final String PREF_KEY_IS_FILTERED_LIST_AVAILABLE = "IS_FILTERED_LIST_AVAILABLE";
     public static final String PREF_KEY_DOWNLOAD_STATUS = "DOWNLOAD_STATUS";
     public static final String PREF_KEY_UPDATE_STATUS = "UPDATE_STATUS";
     public static final String PREF_KEY_HAS_INTERNET_CONNECTIVITY = "HAS_INTERNET_CONNECTIVITY";
@@ -41,4 +41,7 @@ public final class Constants {
     public static final String FILTER_STRING_GERMAN = "ED";
 
     public static final String METAR_LABEL_RAW_DATA = "ob:";
+
+    public static final String UNKNOWN_STATION = "Station Not Available";
+    public static final String SELECT_ITEM = "Select an item...";
 }

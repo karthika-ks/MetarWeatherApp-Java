@@ -31,12 +31,14 @@ import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NO
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
 import static com.example.metarapp.utilities.Constants.PREF_KEY_HAS_INTERNET_CONNECTIVITY;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
+import static com.example.metarapp.utilities.Constants.UNKNOWN_STATION;
 
 public class NetworkUtil {
 
     private static final String TAG = NetworkUtil.class.getSimpleName();
 
     private static HttpURLConnection getHttpConnection(URL url) throws IOException {
+
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         httpConn.setUseCaches(false);
         httpConn.setDoInput(true); // true if we want to read server's response
@@ -69,8 +71,6 @@ public class NetworkUtil {
                 urlc.setConnectTimeout(60 * 1000); // mTimeout is in seconds
                 urlc.connect();
 
-                Log.i(TAG, "isNetworkConnected: Response code : " + urlc.getResponseCode());
-
                 if (urlc.getResponseCode() == 200 || urlc.getResponseCode() == 429) {
                     setInternetStatus(true);
                     return true;
@@ -80,7 +80,6 @@ public class NetworkUtil {
                 }
 
             } catch (IOException e) {
-//                Log.e(TAG, "Error checking internet connection", e);
                 setInternetStatus(false);
                 return false;
             }
@@ -91,6 +90,7 @@ public class NetworkUtil {
     }
 
     private void setInternetStatus(boolean internetConnectivity) {
+
         SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.putBoolean(PREF_KEY_HAS_INTERNET_CONNECTIVITY, internetConnectivity);
@@ -98,7 +98,6 @@ public class NetworkUtil {
     }
 
     public static Bundle readDecodedDataFromServer(String code) throws IOException {
-        Log.i(TAG, "readDecodedDataFromServer: Code " + code);
 
         URL url = getDecodedDataUrl(code);
         Bundle bundle = new Bundle();
@@ -107,20 +106,16 @@ public class NetworkUtil {
 
         try {
 
-            Log.i(TAG, "readDecodedDataFromServer: Code " + code);
             InputStream inputStream = NetworkUtil.getHttpConnection(url).getInputStream();
-            Log.i(TAG, "readDecodedDataFromServer: End Code " + code);
 
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 data = getMetarData(reader, code);
-                Log.i(TAG, "readDecodedDataFromServer: " + data.toString());
 
                 bundle.putParcelable(EXTRA_METAR_DATA, data);
                 bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_INTERNET_CONNECTION_OK);
             }
         } catch (FileNotFoundException e) {
-//            Log.e(TAG, "readDecodedDataFromServer: FileNotFoundException", e);
             bundle.putParcelable(EXTRA_METAR_DATA, data);
             bundle.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);
             return bundle;
@@ -144,7 +139,7 @@ public class NetworkUtil {
                 String stationName = line.substring(0, line.indexOf('('));
                 data.setStationName(stationName);
             } else {
-                data.setStationName("Unknown Station");
+                data.setStationName(UNKNOWN_STATION);
             }
         }
 
@@ -167,8 +162,7 @@ public class NetworkUtil {
         return data;
     }
 
-    public List<String> parseStationNamesFromServer() throws IOException{
-        Log.i(TAG, "parseStationNamesFromServer: ");
+    public List<String> parseStationNamesFromServer() throws IOException {
 
         URL url = getStationListUrl();
         List<String> htmlList = new ArrayList<>();
@@ -198,7 +192,6 @@ public class NetworkUtil {
                     String code = m.group(i).replaceAll(">", "");
 
                     if (code.startsWith(FILTER_STRING_GERMAN)) {
-                        Log.i(TAG, "parseStationNamesFromServer: <<<<<<<<<<<<<<<<<< " + code);
                         stationCodeList.add(code);
                     }
                     }

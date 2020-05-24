@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.lifecycle.Lifecycle;
@@ -43,11 +42,12 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     public MutableLiveData<String> mStationName = new MutableLiveData<>();
     public MutableLiveData<String> mLastUpdatedTime = new MutableLiveData<>();
 
+    private String mCurrentBoundedActivity;
     private static final String TAG = "MetarViewModel";
-    private static MetarViewModel sInstance;
     private String lastSelectedStationCode = "";
+    private String mRequestCallingActivity;
 
-    private MetarViewModel() {
+    public MetarViewModel() {
         clearMutableValues();
         registerNetworkReceiver();
     }
@@ -106,28 +106,25 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         }
     }
 
-    public static MetarViewModel getInstance() {
-        if (sInstance == null) {
-            sInstance = new MetarViewModel();
-        }
-        return sInstance;
+    public void setCurrentBoundedActivity(String activity) {
+        mCurrentBoundedActivity = activity;
     }
 
     public void onSendClicked() {
         if (mEditTextCodeEntry.getValue() != null && !mEditTextCodeEntry.getValue().isEmpty()) {
-            Log.i(TAG, "onSendClicked: Code = " + mEditTextCodeEntry.getValue());
             startMetarService(mEditTextCodeEntry.getValue().toUpperCase());
         }
     }
 
     public void onRefreshClicked() {
-        Log.i(TAG, "onRefreshClicked: ");
-        if (!lastSelectedStationCode.isEmpty())
+        if (!lastSelectedStationCode.isEmpty()) {
             startMetarService(lastSelectedStationCode);
+        }
     }
 
     public void startMetarService(String code) {
         lastSelectedStationCode = code;
+        mRequestCallingActivity = mCurrentBoundedActivity;
         startBusyIndicator();
         Intent cbIntent =  new Intent();
         cbIntent.setClass(MetarBrowserApp.getInstance().getApplicationContext(), MetarIntentService.class);
@@ -137,6 +134,7 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
 
         if (MetarDataManager.getInstance().checkIfExist(code)) {
             MetarData metarData = MetarDataManager.getInstance().getIfCachedDataAvailable(code);
+
             if (metarData != null) {
                 updateUi(NETWORK_STATUS_INTERNET_CONNECTION_OK, metarData);
             }
@@ -149,7 +147,6 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     public void clearMutableValues() {
-        Log.i(TAG, "clearMutableValues: ");
         mDecodedData.setValue("");
         mICAOCode.setValue("");
         mStationName.setValue("");
@@ -161,23 +158,26 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         isStationAvailable.setValue(true);
         isDownloadProgress.setValue(false);
         lastSelectedStationCode = "";
+        mCurrentBoundedActivity = "";
+        mRequestCallingActivity = "";
     }
 
     private class NetworkReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(TAG, "onReceive: ");
+
             if (intent.getAction().equals(ACTION_NETWORK_RESPONSE)) {
+                if (mCurrentBoundedActivity.equals(mRequestCallingActivity)) {
+                    int networkStatus = intent.getIntExtra(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
+                    MetarData metarData = intent.getParcelableExtra(EXTRA_METAR_DATA);
 
-                int networkStatus = intent.getIntExtra(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
-                MetarData metarData = intent.getParcelableExtra(EXTRA_METAR_DATA);
+                    if (metarData != null) {
+                        updateUi(networkStatus, metarData);
 
-                if (metarData != null) {
-                    updateUi(networkStatus, metarData);
-
-                    if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
-                        MetarDataManager.getInstance().saveMetarDataDownloaded(networkStatus, metarData);
+                        if (networkStatus == NETWORK_STATUS_INTERNET_CONNECTION_OK) {
+                            MetarDataManager.getInstance().saveMetarDataDownloaded(networkStatus, metarData);
+                        }
                     }
                 }
             }

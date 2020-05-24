@@ -1,18 +1,13 @@
 <resources>
     <string name="app_name">MetarApp</string>
-    <string name="label_station">STATION</string>
     <string name="hint_icao_code">ICAO Code</string>
-    <string name="btn_label_get_metar">GET METAR</string>
-    <string name="txt_welcome_message">Welcome \nto\nMETAR Browser</string>
     <string name="btn_label_search_code">Search by ICAO Code</string>
     <string name="btn_label_search_from_list">Search from Filtered List</string>
     <string name="txt_no_internet_connectivity">Connectivity Status Offline</string>
     <string name="txt_airport_not_found">Airport not found, Please check ICAO code entered</string>
     <string name="txt_last_available_update">Last available update</string>
     <string name="label_raw_data">Raw Data</string>
-    <string name="content">Content</string>
     <string name="label_decoded_data">Decoded Data</string>
-    <string name="txt_available_list">List of available German ICAO Station Code</string>
     <string name="label_metar_browser">Metar Browser</string>
-    <string name="label_select_station">Select Station</string>
+    <string name="label_select_station">Select German Station</string>
 </resources>

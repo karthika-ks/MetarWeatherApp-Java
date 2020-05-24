@@ -37,7 +37,6 @@ public class MetarContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        Log.i(TAG, "onCreate: ");
         Context context = getContext();
         DatabaseHelper dbHelper = new DatabaseHelper(context);
         db = dbHelper.getWritableDatabase();

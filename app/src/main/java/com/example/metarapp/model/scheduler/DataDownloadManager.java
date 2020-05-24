@@ -49,13 +49,12 @@ public class DataDownloadManager {
     }
 
     private DataDownloadManager() {
-        mDownloadWorkQueue = new LinkedBlockingDeque<Runnable>(1000);
-        mDataDownloadTaskWorkQueue = new LinkedBlockingQueue<DataDownloadTask>();
+        mDownloadWorkQueue = new LinkedBlockingDeque<>(1000);
+        mDataDownloadTaskWorkQueue = new LinkedBlockingQueue<>();
 
         int noOfCores = Runtime.getRuntime().availableProcessors();
         Log.i(TAG, "DataDownloadManager: No Of Core = " + noOfCores);
-        int corePoolSize = noOfCores * (1 + (NETWORK_RESPONSE_WAITING_TIME / POST_NETWORK_SERVICE_TIME)); //Optimal thread pool calculation
-        int maxPoolSize = corePoolSize;
+        int maxPoolSize = noOfCores * (1 + (NETWORK_RESPONSE_WAITING_TIME / POST_NETWORK_SERVICE_TIME)); //Optimal thread pool calculation
 
         mDownloadThreadPool = new ThreadPoolExecutor(noOfCores + 1, maxPoolSize, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mDownloadWorkQueue);
 
@@ -72,14 +71,12 @@ public class DataDownloadManager {
                 switch (inputMessage.what) {
 
                     case DOWNLOAD_STARTED: {
-                        Log.i(TAG, "handleMessage: Download has started for station " + stationCode);
                         if (mDownloadStatus.get() == DOWNLOAD_COMPLETE)
                             mDownloadStatus.set(DOWNLOAD_STARTED);
                     }
                     break;
 
                     case DOWNLOAD_COMPLETE: {
-                        Log.i(TAG, "handleMessage: Download for station " + stationCode + " has completed");
                         recycleTask(dataDownloadTask);
                         // Save data to DB and to list
                         Bundle bundle = dataDownloadTask.getMetarData();
@@ -109,7 +106,6 @@ public class DataDownloadManager {
     }
 
     private void startDownload(String stationCode) {
-        Log.i(TAG, "startDownload: Code " + stationCode);
 
         DataDownloadTask downloadTask = sInstance.mDataDownloadTaskWorkQueue.poll();
 
@@ -122,7 +118,6 @@ public class DataDownloadManager {
     }
 
     private void onUpdateCacheCompleted() {
-        Log.i(TAG, "onUpdateCacheCompleted: ");
         completedThreadCount = 0;
         mDownloadStatus.set(DOWNLOAD_COMPLETE);
 

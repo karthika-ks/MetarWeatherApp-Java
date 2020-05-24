@@ -9,8 +9,6 @@ import com.example.metarapp.utilities.NetworkUtil;
 
 import java.io.IOException;
 
-import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
-import static com.example.metarapp.utilities.Constants.EXTRA_DECODED_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
@@ -47,13 +45,11 @@ public class DataDownloadTask implements DataDownloadRunnable.TaskRunnableDownlo
 
     @Override
     public void handleDownloadState(int state) {
-        Log.i(TAG, "handleDownloadState: " + state);
         sDataManager.handleState(this, state);
     }
 
     @Override
     public Bundle downloadMetarData(String code) {
-        Log.i(TAG, "downloadMetarData: code " + code);
         Bundle metarData;
         MetarData data = new MetarData();
         data.setCode(code);
@@ -66,11 +62,9 @@ public class DataDownloadTask implements DataDownloadRunnable.TaskRunnableDownlo
                 metarData = new Bundle();
                 metarData.putParcelable(EXTRA_METAR_DATA, data);
                 metarData.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_NO_INTERNET_CONNECTION);
-                Log.i(TAG, "downloadMetarData: No internet connection");
             }
 
         } catch (IOException e) {
-            Log.e(TAG, "downloadMetarData: ", e);
             metarData = new Bundle();
             metarData.putParcelable(EXTRA_METAR_DATA, data);
             metarData.putInt(EXTRA_NETWORK_STATUS, NETWORK_STATUS_AIRPORT_NOT_FOUND);

@@ -30,7 +30,7 @@ import static com.example.metarapp.utilities.Constants.SERVICE_ACTION;
 
 public class MetarIntentService extends IntentService {
 
-    private static final String TAG = "MetarService";
+    private static final String TAG = MetarIntentService.class.getSimpleName();
 
     public MetarIntentService() {
         super("Metar Intent Service");
@@ -38,22 +38,18 @@ public class MetarIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        Log.i(TAG, "onHandleIntent: ");
 
         assert intent != null;
         if (Objects.equals(intent.getStringExtra(SERVICE_ACTION), FETCH_GERMAN_STATION_LIST)) {
-            Log.i(TAG, "onHandleIntent: Start list fetch");
             boolean internetConnectivity = new NetworkUtil().isNetworkConnected(getApplicationContext());
 
             try {
                 if (internetConnectivity) {
                     String[] codeList = new NetworkUtil().parseStationNamesFromServer().toArray(new String[0]);
-                    Log.i(TAG, "onHandleIntent: List size = " + codeList.length);
                     sendFilteredStationList(NETWORK_STATUS_INTERNET_CONNECTION_OK,codeList);
                 } else {
                     sendFilteredStationList(NETWORK_STATUS_NO_INTERNET_CONNECTION, new String[0]);
                 }
-                Log.i(TAG, "onHandleIntent: End list fetch");
 
             } catch (IOException e) {
                 Log.e(TAG, "onHandleIntent: ", e);
@@ -83,7 +79,6 @@ public class MetarIntentService extends IntentService {
     }
 
     private void sendMetarDetailsFromServer(int networkStatus, MetarData metarData) {
-        Log.i(TAG, "sendMetarDetailsFromServer: Code " + metarData.getCode());
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MetarBrowserApp.getInstance().getApplicationContext());
         Intent intent = new Intent();
@@ -94,7 +89,7 @@ public class MetarIntentService extends IntentService {
     }
 
     private void sendFilteredStationList(int networkStatus, String[] stationList) {
-        Log.i(TAG, "sendFilteredStationList: stationList.length = " + stationList.length);
+
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MetarBrowserApp.getInstance().getApplicationContext());
         Intent intent = new Intent();
         intent.setAction(ACTION_LIST_FETCH_RESPONSE);
@@ -104,7 +99,6 @@ public class MetarIntentService extends IntentService {
     }
 
     private Bundle requestMetarDataFromServer(String code) throws IOException {
-        Log.i(TAG, "requestMetarDataFromServer: code - " + code);
         return NetworkUtil.readDecodedDataFromServer(code);
     }
 }

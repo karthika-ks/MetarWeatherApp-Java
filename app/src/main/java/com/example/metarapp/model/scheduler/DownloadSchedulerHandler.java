@@ -17,7 +17,6 @@ public class DownloadSchedulerHandler {
     private Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG, "Update started");
             if (!MetarDataManager.getInstance().getMetarHashMap().isEmpty()) {
 
                 DataDownloadManager.getInstance().updateCache();
@@ -27,7 +26,6 @@ public class DownloadSchedulerHandler {
                         break;
                 }
             }
-            Log.d(TAG, "Update finished");
         }
     };
 
@@ -35,7 +33,6 @@ public class DownloadSchedulerHandler {
     ScheduledFuture<?> schedulerHandler;
 
     public void startScheduler() {
-        Log.d(TAG, "startScheduler");
         schedulerHandler = scheduler.scheduleAtFixedRate(updateRunnable, 5, 10, TimeUnit.SECONDS);
     }
 }

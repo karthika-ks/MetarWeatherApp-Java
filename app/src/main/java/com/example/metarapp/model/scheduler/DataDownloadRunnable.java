@@ -25,7 +25,6 @@ public class DataDownloadRunnable implements Runnable {
     }
     @Override
     public void run() {
-        Log.i(TAG, "run: ");
 
         mDataDownloadTask.setDownloadThread(Thread.currentThread());
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);

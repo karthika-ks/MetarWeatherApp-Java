@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.EditText;
 
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 
 import com.example.metarapp.viewmodel.MetarViewModel;
 import com.example.metarapp.R;
@@ -24,11 +23,12 @@ public class SearchByCodeActivity extends AppCompatActivity {
 
         // Binding with ViewModel
         ActivitySearchByCodeBinding activityBinding = DataBindingUtil.setContentView(this, R.layout.activity_search_by_code);
-        MetarViewModel viewModel = MetarViewModel.getInstance();
+        MetarViewModel viewModel = new MetarViewModel();
         activityBinding.setViewModel(viewModel);
         activityBinding.executePendingBindings();
         activityBinding.setLifecycleOwner(this);
         viewModel.registerLifeCycleObserver(getLifecycle());
+        viewModel.setCurrentBoundedActivity(SearchByCodeActivity.class.getSimpleName());
 
        final EditText editText = findViewById(R.id.edit_code);
        editText.addTextChangedListener(new TextWatcher() {

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -28,7 +27,7 @@ import static com.example.metarapp.utilities.Constants.EXTRA_STATION_LIST;
 import static com.example.metarapp.utilities.Constants.FETCH_GERMAN_STATION_LIST;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
 import static com.example.metarapp.utilities.Constants.PREF_KEY_DOWNLOAD_STATUS;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_AVAILABLE;
+import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_FILTERED_LIST_AVAILABLE;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 import static com.example.metarapp.utilities.Constants.SERVICE_ACTION;
 
@@ -63,7 +62,7 @@ public class MetarDataManager {
 
         SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
 
-        if (!pref.getBoolean(PREF_KEY_IS_AVAILABLE, false)) {
+        if (!pref.getBoolean(PREF_KEY_IS_FILTERED_LIST_AVAILABLE, false)) {
 
             SharedPreferences.Editor editor = pref.edit();
             editor.putInt(PREF_KEY_DOWNLOAD_STATUS, DOWNLOAD_STARTED);
@@ -73,7 +72,6 @@ public class MetarDataManager {
 
         } else {
             // Fetch code from Database
-            Log.i(TAG, "getFilteredStationList: list is already available");
             fetchFilteredStationListFromDB();
         }
     }
@@ -115,7 +113,7 @@ public class MetarDataManager {
 
         SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        editor.putBoolean(PREF_KEY_IS_AVAILABLE, true);
+        editor.putBoolean(PREF_KEY_IS_FILTERED_LIST_AVAILABLE, true);
         editor.putInt(PREF_KEY_DOWNLOAD_STATUS, DOWNLOAD_COMPLETE);
         editor.apply();
     }
@@ -134,7 +132,6 @@ public class MetarDataManager {
                 mMetarDataHashMap.put(cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_CODE)),metarData);
 
             } while (cursor.moveToNext());
-            Log.i(TAG, "getCachedMetarData: " + mMetarDataHashMap.size());
         }
     }
 
@@ -148,8 +145,6 @@ public class MetarDataManager {
                 mFilteredStationList[index] = cursor.getString(cursor.getColumnIndex(MetarContentProvider.COLUMN_CODE));
                 index++;
             } while (cursor.moveToNext());
-
-            Log.i(TAG, "setStationCodeToHashMap: " + mFilteredStationList.length);
         }
     }
 
@@ -174,6 +169,7 @@ public class MetarDataManager {
     }
 
     public void saveMetarDataDownloaded(int networkStatus, MetarData metarData) {
+
         if (metarData != null) {
 
             String code = metarData.getCode();
@@ -201,9 +197,7 @@ public class MetarDataManager {
                 } else {
 
                     assert decodedData != null;
-                    if (decodedData.hashCode() == Objects.requireNonNull(Objects.requireNonNull(mMetarDataHashMap.get(code)).getDecodedData().hashCode())) {
-                        Log.i(TAG, "saveMetarDataToDB: No need to update DB and list");
-                    } else {
+                    if (decodedData.hashCode() != Objects.requireNonNull(Objects.requireNonNull(mMetarDataHashMap.get(code)).getDecodedData().hashCode())) {
 
                         ContentValues values = new ContentValues();
                         values.put(MetarContentProvider.COLUMN_DATA, decodedData);
@@ -233,6 +227,7 @@ public class MetarDataManager {
     public String getStationNameFromCode(String code) {
         String stationName = "";
         MetarData metar = mMetarDataHashMap.get(code);
+
         if (metar != null && metar.getStationName() != null) {
             return metar.getStationName();
         }
@@ -240,10 +235,6 @@ public class MetarDataManager {
     }
 
     public void onQueryComplete(int token, Cursor cursor) {
-        Log.i(TAG, "onQueryComplete: token = " + token);
-        if (cursor != null) {
-            Log.i(TAG, "onQueryComplete: Cursor count = " + cursor.getCount());
-        }
 
         if (token == 0) {
             if (mMetarDataHashMap.isEmpty()) {
@@ -257,15 +248,12 @@ public class MetarDataManager {
     }
 
     public void onInsertComplete() {
-        Log.i(TAG, "onInsertComplete: ");
     }
 
     public void onUpdateComplete() {
-        Log.i(TAG, "onUpdateComplete: ");
     }
 
     public void onDeleteComplete() {
-        Log.i(TAG, "onDeleteComplete: ");
     }
 
     private class NetworkReceiver extends BroadcastReceiver {

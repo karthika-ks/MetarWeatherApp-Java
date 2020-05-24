@@ -2,7 +2,6 @@ package com.example.metarapp.view;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,6 +11,7 @@ import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModel;
 
 import com.example.metarapp.databinding.ActivitySearchFromListBinding;
 import com.example.metarapp.model.MetarDataManager;
@@ -23,8 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.metarapp.utilities.Constants.PREF_KEY_HAS_INTERNET_CONNECTIVITY;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_AVAILABLE;
+import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_FILTERED_LIST_AVAILABLE;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
+import static com.example.metarapp.utilities.Constants.SELECT_ITEM;
 
 public class SearchFromListActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, AdapterView.OnItemSelectedListener {
 
@@ -42,10 +43,11 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
         setContentView(R.layout.activity_search_from_list);
 
         ActivitySearchFromListBinding activityStationDetailsBinding = DataBindingUtil.setContentView(this, R.layout.activity_search_from_list);
-        viewModel = MetarViewModel.getInstance();
+        viewModel = new MetarViewModel();
         activityStationDetailsBinding.setViewModel(viewModel);
         activityStationDetailsBinding.executePendingBindings();
         activityStationDetailsBinding.setLifecycleOwner(this);
+        viewModel.setCurrentBoundedActivity(SearchFromListActivity.class.getSimpleName());
 
         viewModel.registerLifeCycleObserver(getLifecycle());
 
@@ -54,7 +56,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
 
         filteredList = new ArrayList<>();
         List<String> filteredStationList = new ArrayList<>();
-        filteredStationList.add("Select an item...");
+        filteredStationList.add(SELECT_ITEM);
 
         dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, filteredStationList);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -86,7 +88,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
     }
 
     private void updateListOnUI() {
-        Log.i(TAG, "updateListOnUI: 1");
+
         SharedPreferences pref = getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
 
         RelativeLayout lytSpinner = findViewById(R.id.lyt_search_bar);
@@ -97,7 +99,6 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
             dataAdapter.notifyDataSetChanged();
             spinner.invalidate();
         } else {
-            Log.i(TAG, "updateListOnUI: German stations are downloading");
             downloadProgress.setVisibility(View.VISIBLE);
             lytSpinner.setVisibility(View.INVISIBLE);
 
@@ -112,7 +113,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
         String[] stationArray = MetarDataManager.getInstance().getFilteredStationList();
         filteredList.clear();
         dataAdapter.clear();
-        dataAdapter.add("Select an item...");
+        dataAdapter.add(SELECT_ITEM);
 
         if (stationArray != null) {
             for (String station : stationArray) {
@@ -124,18 +125,20 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
                 metarData.setStationName(stationName);
                 filteredList.add(metarData);
             }
-        } else {
-            // Show progress bar
         }
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.i(TAG, "onSharedPreferenceChanged: Key = " + key);
 
-        if (sharedPreferences.getBoolean(PREF_KEY_IS_AVAILABLE, false)) {
+        if (sharedPreferences.getBoolean(PREF_KEY_IS_FILTERED_LIST_AVAILABLE, false)) {
             fetchStationList();
             updateListOnUI();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }
