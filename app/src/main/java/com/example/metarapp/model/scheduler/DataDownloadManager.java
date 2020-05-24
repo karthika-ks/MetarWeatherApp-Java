@@ -11,7 +11,6 @@ import com.example.metarapp.MetarBrowserApp;
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.utilities.MetarData;
 
-import java.util.HashMap;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -21,14 +20,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.example.metarapp.utilities.Constants.CORE_POOL_SIZE;
 import static com.example.metarapp.utilities.Constants.DOWNLOAD_COMPLETE;
 import static com.example.metarapp.utilities.Constants.DOWNLOAD_STARTED;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.KEEP_ALIVE_TIME;
 import static com.example.metarapp.utilities.Constants.KEEP_ALIVE_TIME_UNIT;
-import static com.example.metarapp.utilities.Constants.MAXIMUM_POOL_SIZE;
+import static com.example.metarapp.utilities.Constants.NETWORK_RESPONSE_WAITING_TIME;
+import static com.example.metarapp.utilities.Constants.POST_NETWORK_SERVICE_TIME;
 import static com.example.metarapp.utilities.Constants.PREF_KEY_UPDATE_STATUS;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 
@@ -50,10 +49,15 @@ public class DataDownloadManager {
     }
 
     private DataDownloadManager() {
-        mDownloadWorkQueue = new LinkedBlockingDeque<Runnable>(100);
+        mDownloadWorkQueue = new LinkedBlockingDeque<Runnable>(1000);
         mDataDownloadTaskWorkQueue = new LinkedBlockingQueue<DataDownloadTask>();
-        mDownloadThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
-                KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mDownloadWorkQueue);
+
+        int noOfCores = Runtime.getRuntime().availableProcessors();
+        Log.i(TAG, "DataDownloadManager: No Of Core = " + noOfCores);
+        int corePoolSize = noOfCores * (1 + (NETWORK_RESPONSE_WAITING_TIME / POST_NETWORK_SERVICE_TIME)); //Optimal thread pool calculation
+        int maxPoolSize = corePoolSize;
+
+        mDownloadThreadPool = new ThreadPoolExecutor(noOfCores + 1, maxPoolSize, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mDownloadWorkQueue);
 
         mDownloadStatus.set(DOWNLOAD_COMPLETE);
 
@@ -136,9 +140,12 @@ public class DataDownloadManager {
             mDownloadStatus.set(DOWNLOAD_STARTED);
 
             SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
-            SharedPreferences.Editor editor = pref.edit();
-            editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED);
-            editor.apply();
+
+            if (pref.getInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED) != DOWNLOAD_COMPLETE) {
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED);
+                editor.apply();
+            }
 
             for (String stationCode : availableStations) {
                 startDownload(stationCode);

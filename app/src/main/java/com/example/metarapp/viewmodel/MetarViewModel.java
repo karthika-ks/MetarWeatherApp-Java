@@ -4,10 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
+import android.content.SharedPreferences;
 import android.util.Log;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -20,9 +18,7 @@ import com.example.metarapp.MetarBrowserApp;
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.model.MetarIntentService;
 import com.example.metarapp.utilities.MetarData;
-import com.example.metarapp.utilities.NetworkUtil;
 
-import static android.content.Context.INPUT_METHOD_SERVICE;
 import static com.example.metarapp.utilities.Constants.ACTION_NETWORK_RESPONSE;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
@@ -48,13 +44,10 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
     public MutableLiveData<String> mLastUpdatedTime = new MutableLiveData<>();
 
     private static final String TAG = "MetarViewModel";
-    private Context context;
     private static MetarViewModel sInstance;
     private String lastSelectedStationCode = "";
 
-    private MetarViewModel(Context context) {
-        this.context = context;
-
+    private MetarViewModel() {
         clearMutableValues();
         registerNetworkReceiver();
     }
@@ -71,7 +64,7 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         NetworkReceiver networkReceiver = new NetworkReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_NETWORK_RESPONSE);
-        LocalBroadcastManager.getInstance(context).registerReceiver(networkReceiver, filter);
+        LocalBroadcastManager.getInstance(MetarBrowserApp.getInstance().getApplicationContext()).registerReceiver(networkReceiver, filter);
     }
 
     private void updateUi(int networkStatus, MetarData metarData) {
@@ -113,9 +106,9 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         }
     }
 
-    public static MetarViewModel getInstance(Context context) {
+    public static MetarViewModel getInstance() {
         if (sInstance == null) {
-            sInstance = new MetarViewModel(context);
+            sInstance = new MetarViewModel();
         }
         return sInstance;
     }
@@ -137,10 +130,10 @@ public class MetarViewModel extends ViewModel implements LifecycleObserver {
         lastSelectedStationCode = code;
         startBusyIndicator();
         Intent cbIntent =  new Intent();
-        cbIntent.setClass(context, MetarIntentService.class);
+        cbIntent.setClass(MetarBrowserApp.getInstance().getApplicationContext(), MetarIntentService.class);
         cbIntent.putExtra(EXTRA_CODE, code);
         cbIntent.putExtra(SERVICE_ACTION, FETCH_METAR_DATA);
-        context.startService(cbIntent);
+        MetarBrowserApp.getInstance().getApplicationContext().startService(cbIntent);
 
         if (MetarDataManager.getInstance().checkIfExist(code)) {
             MetarData metarData = MetarDataManager.getInstance().getIfCachedDataAvailable(code);

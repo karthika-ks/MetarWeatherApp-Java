@@ -1,10 +1,13 @@
 package com.example.metarapp.utilities;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.example.metarapp.MetarBrowserApp;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -19,12 +22,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
 import static com.example.metarapp.utilities.Constants.FILTER_STRING_GERMAN;
 import static com.example.metarapp.utilities.Constants.METAR_LABEL_RAW_DATA;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_AIRPORT_NOT_FOUND;
 import static com.example.metarapp.utilities.Constants.NETWORK_STATUS_INTERNET_CONNECTION_OK;
+import static com.example.metarapp.utilities.Constants.PREF_KEY_HAS_INTERNET_CONNECTIVITY;
+import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 
 public class NetworkUtil {
 
@@ -66,18 +72,29 @@ public class NetworkUtil {
                 Log.i(TAG, "isNetworkConnected: Response code : " + urlc.getResponseCode());
 
                 if (urlc.getResponseCode() == 200 || urlc.getResponseCode() == 429) {
+                    setInternetStatus(true);
                     return true;
                 } else {
+                    setInternetStatus(false);
                     return false;
                 }
 
             } catch (IOException e) {
 //                Log.e(TAG, "Error checking internet connection", e);
+                setInternetStatus(false);
                 return false;
             }
         }
 
+        setInternetStatus(false);
         return false;
+    }
+
+    private void setInternetStatus(boolean internetConnectivity) {
+        SharedPreferences pref = MetarBrowserApp.getInstance().getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean(PREF_KEY_HAS_INTERNET_CONNECTIVITY, internetConnectivity);
+        editor.apply();
     }
 
     public static Bundle readDecodedDataFromServer(String code) throws IOException {
@@ -90,7 +107,9 @@ public class NetworkUtil {
 
         try {
 
+            Log.i(TAG, "readDecodedDataFromServer: Code " + code);
             InputStream inputStream = NetworkUtil.getHttpConnection(url).getInputStream();
+            Log.i(TAG, "readDecodedDataFromServer: End Code " + code);
 
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

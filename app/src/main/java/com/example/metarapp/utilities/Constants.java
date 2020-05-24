@@ -22,6 +22,8 @@ public final class Constants {
     public static final TimeUnit KEEP_ALIVE_TIME_UNIT =  TimeUnit.SECONDS;
     public static final int CORE_POOL_SIZE = 8;
     public static final int MAXIMUM_POOL_SIZE = 8;
+    public static final int NETWORK_RESPONSE_WAITING_TIME = 250; // Time unit in milliseconds
+    public static final int POST_NETWORK_SERVICE_TIME = 5; // Time unit in milliseconds
 
     public static final int DOWNLOAD_STARTED = 0;
     public static final int DOWNLOAD_COMPLETE = 1;
@@ -30,6 +32,7 @@ public final class Constants {
     public static final String PREF_KEY_IS_AVAILABLE = "IS_AVAILABLE";
     public static final String PREF_KEY_DOWNLOAD_STATUS = "DOWNLOAD_STATUS";
     public static final String PREF_KEY_UPDATE_STATUS = "UPDATE_STATUS";
+    public static final String PREF_KEY_HAS_INTERNET_CONNECTIVITY = "HAS_INTERNET_CONNECTIVITY";
 
     public static final int NETWORK_STATUS_NO_INTERNET_CONNECTION = 0;
     public static final int NETWORK_STATUS_INTERNET_CONNECTION_OK = 1;

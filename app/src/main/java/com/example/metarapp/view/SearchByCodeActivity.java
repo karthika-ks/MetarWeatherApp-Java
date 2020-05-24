@@ -24,7 +24,7 @@ public class SearchByCodeActivity extends AppCompatActivity {
 
         // Binding with ViewModel
         ActivitySearchByCodeBinding activityBinding = DataBindingUtil.setContentView(this, R.layout.activity_search_by_code);
-        MetarViewModel viewModel = MetarViewModel.getInstance(getApplicationContext());
+        MetarViewModel viewModel = MetarViewModel.getInstance();
         activityBinding.setViewModel(viewModel);
         activityBinding.executePendingBindings();
         activityBinding.setLifecycleOwner(this);

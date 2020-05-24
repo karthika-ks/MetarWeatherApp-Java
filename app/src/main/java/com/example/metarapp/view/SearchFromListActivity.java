@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,10 +22,8 @@ import com.example.metarapp.viewmodel.MetarViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.metarapp.utilities.Constants.DOWNLOAD_COMPLETE;
-import static com.example.metarapp.utilities.Constants.DOWNLOAD_STARTED;
+import static com.example.metarapp.utilities.Constants.PREF_KEY_HAS_INTERNET_CONNECTIVITY;
 import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_AVAILABLE;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_UPDATE_STATUS;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 
 public class SearchFromListActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, AdapterView.OnItemSelectedListener {
@@ -43,7 +42,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
         setContentView(R.layout.activity_search_from_list);
 
         ActivitySearchFromListBinding activityStationDetailsBinding = DataBindingUtil.setContentView(this, R.layout.activity_search_from_list);
-        viewModel = MetarViewModel.getInstance(getApplicationContext());
+        viewModel = MetarViewModel.getInstance();
         activityStationDetailsBinding.setViewModel(viewModel);
         activityStationDetailsBinding.executePendingBindings();
         activityStationDetailsBinding.setLifecycleOwner(this);
@@ -87,19 +86,25 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
     }
 
     private void updateListOnUI() {
-        Log.i(TAG, "updateListOnUI: ");
+        Log.i(TAG, "updateListOnUI: 1");
+        SharedPreferences pref = getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
+
+        RelativeLayout lytSpinner = findViewById(R.id.lyt_search_bar);
 
         if (filteredList != null && !filteredList.isEmpty()) {
-            SharedPreferences pref = getApplicationContext().getSharedPreferences(PREF_NAME_GERMAN_LIST, MODE_PRIVATE);
-
-            if (pref.getInt(PREF_KEY_UPDATE_STATUS, DOWNLOAD_STARTED) == DOWNLOAD_COMPLETE) {
-                downloadProgress.setVisibility(View.GONE);
-                dataAdapter.notifyDataSetChanged();
-                spinner.invalidate();
-            }
+            downloadProgress.setVisibility(View.GONE);
+            lytSpinner.setVisibility(View.VISIBLE);
+            dataAdapter.notifyDataSetChanged();
+            spinner.invalidate();
         } else {
-            Log.i(TAG, "onCreate: German stations are downloading");
+            Log.i(TAG, "updateListOnUI: German stations are downloading");
             downloadProgress.setVisibility(View.VISIBLE);
+            lytSpinner.setVisibility(View.INVISIBLE);
+
+            if (!pref.getBoolean(PREF_KEY_HAS_INTERNET_CONNECTIVITY, false)) {
+                downloadProgress.setVisibility(View.GONE);
+                viewModel.hasNetworkConnectivity.setValue(false);
+            }
         }
     }
 
@@ -112,7 +117,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
         if (stationArray != null) {
             for (String station : stationArray) {
                 String stationName = MetarDataManager.getInstance().getStationNameFromCode(station);
-                dataAdapter.add(station + " : " + stationName);
+                dataAdapter.add(station);
 
                 MetarData metarData = new MetarData();
                 metarData.setCode(station);

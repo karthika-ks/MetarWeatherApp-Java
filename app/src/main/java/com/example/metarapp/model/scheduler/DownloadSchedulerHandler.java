@@ -36,6 +36,6 @@ public class DownloadSchedulerHandler {
 
     public void startScheduler() {
         Log.d(TAG, "startScheduler");
-        schedulerHandler = scheduler.scheduleAtFixedRate(updateRunnable, 0, 10, TimeUnit.SECONDS);
+        schedulerHandler = scheduler.scheduleAtFixedRate(updateRunnable, 5, 10, TimeUnit.SECONDS);
     }
 }
