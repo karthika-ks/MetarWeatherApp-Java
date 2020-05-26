@@ -1,6 +1,12 @@
 package com.example.metarapp.model.scheduler;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +14,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.example.metarapp.MetarBrowserApp;
+import com.example.metarapp.model.INetworkConnectivityListener;
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.utilities.MetarData;
 
@@ -39,16 +46,19 @@ public class DataDownloadManager {
     private final BlockingQueue<Runnable> mDownloadWorkQueue;
     private final Queue<DataDownloadTask> mDataDownloadTaskWorkQueue;
     private final ThreadPoolExecutor mDownloadThreadPool;
+    private final DownloadSchedulerHandler mDownloadSchedulerHandler;
 
     private int completedThreadCount = 0;
     private Handler mHandler;
     private AtomicInteger mDownloadStatus = new AtomicInteger();
+    private INetworkConnectivityListener mNetworkConnectivityListener;
 
     static {
         sInstance = new DataDownloadManager();
     }
 
     private DataDownloadManager() {
+        registerNetworkChangeReceiver();
         mDownloadWorkQueue = new LinkedBlockingDeque<>(1000);
         mDataDownloadTaskWorkQueue = new LinkedBlockingQueue<>();
 
@@ -97,7 +107,40 @@ public class DataDownloadManager {
             }
         };
 
-        new DownloadSchedulerHandler().startScheduler();
+        mDownloadSchedulerHandler = new DownloadSchedulerHandler();
+
+        ConnectivityManager cm = (ConnectivityManager) MetarBrowserApp.getInstance().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        assert cm != null;
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            mDownloadSchedulerHandler.startScheduler();
+        }
+    }
+
+    private void registerNetworkChangeReceiver() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) MetarBrowserApp.getInstance().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkRequest request = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .build();
+        ConnectivityManager.NetworkCallback mNetworkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(final Network net) {
+                mDownloadSchedulerHandler.startScheduler();
+                Log.d(TAG, "Network connectivity onAvailable " + net.toString());
+                mNetworkConnectivityListener.onConnected();
+            }
+
+            @Override
+            public void onLost(final Network net) {
+                Log.d(TAG, "Network connectivity onLost");
+                mDownloadSchedulerHandler.stopScheduler();
+                mNetworkConnectivityListener.onDisconnected();
+            }
+        };
+        connectivityManager.registerNetworkCallback(request, mNetworkCallback);
     }
 
     private void recycleTask(DataDownloadTask downloadTask) {
@@ -170,5 +213,9 @@ public class DataDownloadManager {
 
     public static DataDownloadManager getInstance() {
         return sInstance;
+    }
+
+    public void registerNetworkListener(INetworkConnectivityListener listener) {
+        mNetworkConnectivityListener = listener;
     }
 }

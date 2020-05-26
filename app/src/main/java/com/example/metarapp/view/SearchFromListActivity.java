@@ -11,19 +11,16 @@ import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModel;
 
 import com.example.metarapp.databinding.ActivitySearchFromListBinding;
 import com.example.metarapp.model.MetarDataManager;
 import com.example.metarapp.R;
-import com.example.metarapp.utilities.MetarData;
 import com.example.metarapp.viewmodel.MetarViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.metarapp.utilities.Constants.PREF_KEY_HAS_INTERNET_CONNECTIVITY;
-import static com.example.metarapp.utilities.Constants.PREF_KEY_IS_FILTERED_LIST_AVAILABLE;
 import static com.example.metarapp.utilities.Constants.PREF_NAME_GERMAN_LIST;
 import static com.example.metarapp.utilities.Constants.SELECT_ITEM;
 
@@ -31,7 +28,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
 
     private static final String TAG = SearchFromListActivity.class.getSimpleName();
 
-    private List<MetarData> filteredList;
+    private List<String> filteredList;
     private MetarViewModel viewModel;
     private ArrayAdapter<String> dataAdapter;
     private Spinner spinner;
@@ -74,7 +71,7 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (position != 0 && position <= filteredList.size()) {
-            viewModel.startMetarService(filteredList.get(position - 1).getCode());
+            viewModel.startMetarService(filteredList.get(position - 1));
         }
     }
 
@@ -98,13 +95,16 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
             lytSpinner.setVisibility(View.VISIBLE);
             dataAdapter.notifyDataSetChanged();
             spinner.invalidate();
+            viewModel.hasNetworkConnectivity.setValue(true);
         } else {
-            downloadProgress.setVisibility(View.VISIBLE);
             lytSpinner.setVisibility(View.INVISIBLE);
 
             if (!pref.getBoolean(PREF_KEY_HAS_INTERNET_CONNECTIVITY, false)) {
                 downloadProgress.setVisibility(View.GONE);
                 viewModel.hasNetworkConnectivity.setValue(false);
+            } else {
+                downloadProgress.setVisibility(View.VISIBLE);
+                viewModel.hasNetworkConnectivity.setValue(true);
             }
         }
     }
@@ -117,24 +117,16 @@ public class SearchFromListActivity extends AppCompatActivity implements SharedP
 
         if (stationArray != null) {
             for (String station : stationArray) {
-                String stationName = MetarDataManager.getInstance().getStationNameFromCode(station);
                 dataAdapter.add(station);
-
-                MetarData metarData = new MetarData();
-                metarData.setCode(station);
-                metarData.setStationName(stationName);
-                filteredList.add(metarData);
+                filteredList.add(station);
             }
         }
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
-        if (sharedPreferences.getBoolean(PREF_KEY_IS_FILTERED_LIST_AVAILABLE, false)) {
-            fetchStationList();
-            updateListOnUI();
-        }
+        fetchStationList();
+        updateListOnUI();
     }
 
     @Override

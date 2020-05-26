@@ -9,6 +9,7 @@ public final class Constants {
     public static final String SERVICE_ACTION = "SERVICE_ACTION";
     public static final String FETCH_GERMAN_STATION_LIST = "FETCH_GERMAN_STATION_LIST";
     public static final String FETCH_METAR_DATA = "FETCH_METAR_DATA";
+    public static final String CHECK_INTERNET_AVAILABILITY = "CHECK_INTERNET_AVAILABILITY";
 
     public static final String EXTRA_CODE = "code";
     public static final String EXTRA_DECODED_DATA = "decoded_data";

@@ -17,6 +17,7 @@ import java.util.Objects;
 
 import static com.example.metarapp.utilities.Constants.ACTION_LIST_FETCH_RESPONSE;
 import static com.example.metarapp.utilities.Constants.ACTION_NETWORK_RESPONSE;
+import static com.example.metarapp.utilities.Constants.CHECK_INTERNET_AVAILABILITY;
 import static com.example.metarapp.utilities.Constants.EXTRA_CODE;
 import static com.example.metarapp.utilities.Constants.EXTRA_METAR_DATA;
 import static com.example.metarapp.utilities.Constants.EXTRA_NETWORK_STATUS;
@@ -46,7 +47,15 @@ public class MetarIntentService extends IntentService {
             try {
                 if (internetConnectivity) {
                     String[] codeList = new NetworkUtil().parseStationNamesFromServer().toArray(new String[0]);
+
+                    for (String station : codeList) {
+                        MetarData metarData = new MetarData();
+                        metarData.setCode(station);
+                        MetarDataManager.getInstance().saveMetarDataDownloaded( NETWORK_STATUS_INTERNET_CONNECTION_OK, metarData);
+                    }
+
                     sendFilteredStationList(NETWORK_STATUS_INTERNET_CONNECTION_OK,codeList);
+
                 } else {
                     sendFilteredStationList(NETWORK_STATUS_NO_INTERNET_CONNECTION, new String[0]);
                 }
@@ -75,6 +84,9 @@ public class MetarIntentService extends IntentService {
             } catch (IOException e) {
                 sendMetarDetailsFromServer(NETWORK_STATUS_AIRPORT_NOT_FOUND, data);
             }
+        } else if (Objects.equals(intent.getStringExtra(SERVICE_ACTION), CHECK_INTERNET_AVAILABILITY)) {
+            boolean internetConnectivity = new NetworkUtil().isNetworkConnected(getApplicationContext());
+            Log.i(TAG, "onHandleIntent: internetConnectivity " + internetConnectivity);
         }
     }
 
